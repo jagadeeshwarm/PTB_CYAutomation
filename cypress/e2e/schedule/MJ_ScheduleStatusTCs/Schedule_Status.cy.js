@@ -80,4 +80,10 @@ describe("Schedule - Task Status Verification", () => {
     taskCreationPage.toggleOnHold();
     taskCreationPage.verifyTaskStatus(STATUS.HOLD);
   });
+
+  it("Step 10: Go back to schedule list → Delete the created schedule → Validate deleted", () => {
+    schedulePage.goBackToScheduleList();
+    schedulePage.deleteScheduleByName(SCHEDULE_NAME);
+    schedulePage.verifyScheduleDoesNotExist(SCHEDULE_NAME);
+  });
 });
