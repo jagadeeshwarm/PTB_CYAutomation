@@ -4,4 +4,4 @@ export { COMMON } from "./commonSelectors";
 export { LOGIN } from "./loginSelectors";
 export { DASHBOARD } from "./dashboardSelectors";
 export { SCHEDULE } from "./scheduleSelectors";
-export { TASK } from "./taskSelectors";
+export { TASK, TASK_COLUMNS } from "./taskSelectors";

@@ -1,4 +1,5 @@
-import { TASK, COMMON } from "../../support/selectors";
+import { TASK, TASK_COLUMNS, COMMON } from "../../support/selectors";
+import { formatDate, addDays, parseDisplayDate } from "../../support/utils/dateUtils";
 
 class TaskCreationPage {
   // --- Toolbar selectors ---
@@ -169,6 +170,108 @@ class TaskCreationPage {
     this.doubleClickTask(currentName);
     this.taskInlineInput.clear().type(newName + "{enter}");
     cy.wait(500);
+  }
+
+  // --- Cell editing on currently selected task row ---
+
+  getSelectedTaskCell(columnIndex) {
+    return cy.get(`${TASK.ganttSelectedRow} > div:nth-child(${columnIndex})`);
+  }
+
+  editSelectedTaskDate(columnIndex, dateValue) {
+    // Native <input type="date"> requires YYYY-MM-DD for cy.type(),
+    // and rejects {enter}. Commit by clicking on the task name cell
+    // (any other cell) to blur the date input.
+    this.getSelectedTaskCell(columnIndex).dblclick();
+    cy.get(TASK.taskDateInput).clear();
+    cy.get(TASK.taskDateInput).type(dateValue);
+    this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
+    cy.wait(500);
+  }
+
+  editSelectedTaskNumber(columnIndex, value) {
+    this.getSelectedTaskCell(columnIndex).dblclick();
+    cy.get(TASK.taskNumberInput).clear().type(`${value}{enter}`);
+    cy.wait(500);
+  }
+
+  editSelectedTaskText(columnIndex, value) {
+    this.getSelectedTaskCell(columnIndex).dblclick();
+    cy.get(TASK.taskInlineInput).clear().type(`${value}{enter}`);
+    cy.wait(500);
+  }
+
+  setStartDate(dateValue) {
+    this.editSelectedTaskDate(TASK_COLUMNS.START_DATE, dateValue);
+  }
+
+  setEndDate(dateValue) {
+    this.editSelectedTaskDate(TASK_COLUMNS.END_DATE, dateValue);
+  }
+
+  // Read the current end date from the cell and offset it by N days
+  adjustEndDate(daysOffset) {
+    this.getSelectedTaskCell(TASK_COLUMNS.END_DATE)
+      .invoke("text")
+      .then((currentText) => {
+        const newDate = formatDate(
+          addDays(daysOffset, parseDisplayDate(currentText)),
+        );
+        this.setEndDate(newDate);
+      });
+  }
+
+  adjustStartDate(daysOffset) {
+    this.getSelectedTaskCell(TASK_COLUMNS.START_DATE)
+      .invoke("text")
+      .then((currentText) => {
+        const newDate = formatDate(
+          addDays(daysOffset, parseDisplayDate(currentText)),
+        );
+        this.setStartDate(newDate);
+      });
+  }
+
+  setDuration(days) {
+    this.editSelectedTaskText(TASK_COLUMNS.DURATION, days);
+  }
+
+  setPercent(percent) {
+    this.editSelectedTaskNumber(TASK_COLUMNS.PERCENT, percent);
+  }
+
+  toggleOnHold() {
+    // The On Hold checkbox sits inside the cell — click the inner wrapper
+    this.getSelectedTaskCell(TASK_COLUMNS.ON_HOLD).find("div > div").click();
+    cy.wait(500);
+  }
+
+  // --- Status helpers ---
+
+  getSelectedTaskStatus() {
+    return this.getSelectedTaskCell(TASK_COLUMNS.STATUS);
+  }
+
+  verifyTaskStatus(expectedStatus) {
+    if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
+      this.getSelectedTaskStatus().invoke("text").then((text) => {
+        expect(text.trim()).to.equal("");
+      });
+    } else {
+      // Case-insensitive comparison — UI may render "OverDue" while constants use "OVERDUE"
+      this.getSelectedTaskStatus().invoke("text").then((text) => {
+        expect(text.trim().toUpperCase()).to.include(
+          expectedStatus.toUpperCase(),
+        );
+      });
+    }
+  }
+
+  verifyDuration(expectedDays) {
+    this.getSelectedTaskCell(TASK_COLUMNS.DURATION).should(
+      "contain.text",
+      String(expectedDays),
+    );
   }
 
   // --- Validation helpers ---
