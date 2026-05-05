@@ -186,7 +186,7 @@ class TaskCreationPage {
     cy.get(TASK.taskDateInput).clear();
     cy.get(TASK.taskDateInput).type(dateValue);
     this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
-    cy.wait(500);
+    cy.wait(500)
   }
 
   editSelectedTaskNumber(columnIndex, value) {
@@ -267,11 +267,43 @@ class TaskCreationPage {
     }
   }
 
+  // Verify status across every task row (e.g. parent + children)
+  verifyAllTasksStatus(expectedStatus) {
+    const statusSelector = `${TASK.ganttTaskRows} > div:nth-child(${TASK_COLUMNS.STATUS}) > div`;
+    cy.get(statusSelector).each(($el) => {
+      const text = $el.text().trim();
+      if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
+        expect(text).to.equal("");
+      } else {
+        expect(text.toUpperCase()).to.include(expectedStatus.toUpperCase());
+      }
+    });
+  }
+
+  // Select the last (most recently created) task row in the gantt grid
+  selectLastTask() {
+    cy.get(TASK.ganttTaskRows).last().click();
+    cy.wait(500);
+  }
+
+  // Select the first task row in the gantt grid
+  selectFirstTask() {
+    cy.get(TASK.ganttTaskRows).first().click();
+    cy.wait(500);
+  }
+
   verifyDuration(expectedDays) {
     this.getSelectedTaskCell(TASK_COLUMNS.DURATION).should(
       "contain.text",
       String(expectedDays),
     );
+  }
+
+  verifyAllTasksDuration(expectedDays) {
+    const durationSelector = `${TASK.ganttTaskRows} > div:nth-child(${TASK_COLUMNS.DURATION})`;
+    cy.get(durationSelector).each(($el) => {
+      expect($el.text().trim()).to.include(String(expectedDays));
+    });
   }
 
   // --- Validation helpers ---
