@@ -1,0 +1,17 @@
+{
+  "name": "ptb_auto",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:schedule": "cypress run --spec cypress/e2e/schedule/**/*.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^15.14.2"
+  }
+}
