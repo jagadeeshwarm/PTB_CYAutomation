@@ -326,6 +326,23 @@ class TaskCreationPage {
     }
   }
 
+  verifyTaskStatusByRow(rowIndex, expectedStatus) {
+    cy.get(TASK.ganttTaskRows)
+      .eq(rowIndex)
+      .find(`> div:nth-child(${TASK_COLUMNS.STATUS})`)
+      .invoke("text")
+      .then((text) => {
+        const trimmedText = text.trim();
+        if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
+          expect(trimmedText).to.equal("");
+        } else {
+          expect(trimmedText.toUpperCase()).to.include(
+            expectedStatus.toUpperCase(),
+          );
+        }
+      });
+  }
+
   // Verify status across every task row (e.g. parent + children)
   verifyAllTasksStatus(expectedStatus) {
     const statusSelector = `${TASK.ganttTaskRows} > div:nth-child(${TASK_COLUMNS.STATUS}) > div`;
