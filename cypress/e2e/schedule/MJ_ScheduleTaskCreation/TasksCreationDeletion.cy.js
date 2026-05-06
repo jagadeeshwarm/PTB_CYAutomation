@@ -15,7 +15,7 @@ describe("Schedule - Task Creation & Deletion", () => {
       loginPage.login(users.testUser.email, users.testUser.password);
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
-      dashboardPage.openProject(0);
+      dashboardPage.openProjectBySearch("Automation Project");
       dashboardPage.selectWorkspaceByIndex(5);
     });
   });

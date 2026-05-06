@@ -29,6 +29,53 @@ class TaskCreationPage {
     cy.wait(1000);
   }
 
+  // --- Top toolbar / column visibility ---
+
+  get topToolbarMoreButton() {
+    return cy.get(TASK.topToolbarMoreButton);
+  }
+
+  openMoreMenu() {
+    this.topToolbarMoreButton.click();
+    cy.wait(500);
+  }
+
+  openShowColumnsMenu() {
+    this.openMoreMenu();
+    cy.contains(`${COMMON.overlayContainer} li a`, TASK.showColumnsMenuText)
+      .first()
+      .click();
+    cy.wait(500);
+  }
+
+  closeOverlayMenu() {
+    cy.get("body").type("{esc}");
+    cy.wait(300);
+  }
+
+  // Iterate every column entry: any item showing the EyeSlash icon (hidden)
+  // gets clicked, flipping it to the Eye icon (visible). Re-queries after each
+  // click because the DOM updates as the icon class changes.
+  // Once no EyeSlash icons remain, click Save to persist.
+  ensureAllColumnsVisible() {
+    this.openShowColumnsMenu();
+
+    const clickNextHidden = () => {
+      cy.get("body").then(($body) => {
+        if ($body.find(TASK.hiddenColumnIcon).length > 0) {
+          cy.get(TASK.hiddenColumnIcon).first().click();
+          cy.wait(300);
+          clickNextHidden();
+        }
+      });
+    };
+
+    clickNextHidden();
+    // All columns now show the Eye icon — persist via Save
+    cy.get(TASK.showColumnsSaveButton).click();
+    cy.wait(800);
+  }
+
   // --- Task selection actions ---
 
   selectTask(taskName) {
@@ -250,6 +297,18 @@ class TaskCreationPage {
 
   getSelectedTaskStatus() {
     return this.getSelectedTaskCell(TASK_COLUMNS.STATUS);
+  }
+
+  // Status verification using data-column-index attr — used after closing
+  // the side panel (when columns shift to the without-side layout)
+  verifyTaskStatusByDataIndex(expectedStatus) {
+    cy.get(TASK.selectedRowStatusByDataIndex)
+      .invoke("text")
+      .then((text) => {
+        expect(text.trim().toUpperCase()).to.include(
+          expectedStatus.toUpperCase(),
+        );
+      });
   }
 
   verifyTaskStatus(expectedStatus) {
