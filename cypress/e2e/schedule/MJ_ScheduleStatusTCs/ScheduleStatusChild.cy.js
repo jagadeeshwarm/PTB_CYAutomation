@@ -59,15 +59,16 @@ describe("Schedule - Parent & Child Task Status Verification", () => {
       taskCreationPage.verifyAllTasksStatus(STATUS.DELAYED);
     });  
 
-    it("Step 6: Move end date 2 days earlier → status DELAYED, duration 8 days", () => {
+    it("Step 6: Move end date 2 days earlier → status DELAYED, duration dynamic", () => {
         taskCreationPage.selectLastTask();
-        // Read current end date from the cell and shift by -2 days (relative, not absolute)
-        taskCreationPage.adjustEndDate(-2);
-        taskCreationPage.verifyAllTasksStatus(STATUS.DELAYED);
-        taskCreationPage.selectFirstTask();
-        taskCreationPage.verifyDuration(8);
-        taskCreationPage.selectLastTask();
-        taskCreationPage.verifyDuration(8);
+        taskCreationPage.computeExpectedDurationAfterAdjust(-2).then((expectedDuration) => {
+          taskCreationPage.adjustEndDate(-2);
+          taskCreationPage.verifyAllTasksStatus(STATUS.DELAYED);
+          taskCreationPage.selectFirstTask();
+          taskCreationPage.verifyDuration(expectedDuration);
+          taskCreationPage.selectLastTask();
+          taskCreationPage.verifyDuration(expectedDuration);
+        });
       });
     
     it("Step 7: Set % to 50 → status should be WIP", () => {

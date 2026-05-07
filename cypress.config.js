@@ -1,6 +1,16 @@
 const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
+  reporter: 'cypress-mochawesome-reporter',
+  reporterOptions: {
+    reportDir: 'cypress/reports',
+    reportFilename: '[datetime]-[status]-report',
+    reportPageTitle: 'PTB Automation Report',
+    charts: true,
+    embeddedScreenshots: true,
+    inlineAssets: true,
+    saveAllAttempts: false,
+  },
   e2e: {
     baseUrl: 'https://staging.plantobuild.online',
     viewportWidth: 1280,
@@ -11,7 +21,7 @@ module.exports = defineConfig({
     video: false,
     screenshotOnRunFailure: true,
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+      require('cypress-mochawesome-reporter/plugin')(on);
     },
   },
 })

@@ -53,5 +53,6 @@ export const TASK_COLUMNS = {
   END_DATE: 7,
   PERCENT: 8,
   STATUS: 12,
-  ON_HOLD: 13,
+  DELAYED: 13,
+  ON_HOLD: 14,
 };

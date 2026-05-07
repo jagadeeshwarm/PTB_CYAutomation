@@ -63,11 +63,13 @@ describe("Schedule - Child of Child Task Status Verification", () => {
     taskCreationPage.verifyAllTasksStatus(STATUS.DELAYED);
   });
 
-  it("Step 6: Move end date 2 days earlier - status DELAYED, duration 8 days for all tasks", () => {
+  it("Step 6: Move end date 2 days earlier - status DELAYED, duration dynamic for all tasks", () => {
     taskCreationPage.selectLastTask();
-    taskCreationPage.adjustEndDate(-2);
-    taskCreationPage.verifyAllTasksStatus(STATUS.DELAYED);
-    taskCreationPage.verifyAllTasksDuration(8);
+    taskCreationPage.computeExpectedDurationAfterAdjust(-2).then((expectedDuration) => {
+      taskCreationPage.adjustEndDate(-2);
+      taskCreationPage.verifyAllTasksStatus(STATUS.DELAYED);
+      taskCreationPage.verifyAllTasksDuration(expectedDuration);
+    });
   });
 
   it("Step 7: Set % to 50 - all tasks status should be WIP", () => {

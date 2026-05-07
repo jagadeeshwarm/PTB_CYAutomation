@@ -1,5 +1,12 @@
 import { TASK, TASK_COLUMNS, COMMON } from "../../support/selectors";
-import { formatDate, addDays, parseDisplayDate } from "../../support/utils/dateUtils";
+import {
+  formatDate,
+  addDays,
+  parseDisplayDate,
+  nextWorkday,
+  prevWorkday,
+  diffCalendarDays,
+} from "../../support/utils/dateUtils";
 
 class TaskCreationPage {
   // --- Toolbar selectors ---
@@ -85,6 +92,13 @@ class TaskCreationPage {
 
   rightClickTask(taskName) {
     cy.contains(TASK.ganttCell, taskName).rightclick();
+    cy.wait(500);
+  }
+
+  rightClickLastTask() {
+    this.getTaskRows().last().click();
+    cy.wait(300);
+    this.getTaskRows().last().rightclick();
     cy.wait(500);
   }
 
@@ -327,7 +341,7 @@ class TaskCreationPage {
   }
 
   verifyTaskStatusByRow(rowIndex, expectedStatus) {
-    cy.get(TASK.ganttTaskRows)
+    cy.get(TASK.ganttRows)
       .eq(rowIndex)
       .find(`> div:nth-child(${TASK_COLUMNS.STATUS})`)
       .invoke("text")
@@ -340,6 +354,52 @@ class TaskCreationPage {
             expectedStatus.toUpperCase(),
           );
         }
+      });
+  }
+
+  verifyTaskPercentByRow(rowIndex, expectedPercent) {
+    cy.get(TASK.ganttRows)
+      .eq(rowIndex)
+      .find(`> div:nth-child(${TASK_COLUMNS.PERCENT})`)
+      .invoke("text")
+      .then((text) => {
+        expect(text.trim()).to.include(String(expectedPercent));
+      });
+  }
+
+  verifyTaskDurationByRow(rowIndex, expectedDays) {
+    cy.get(TASK.ganttRows)
+      .eq(rowIndex)
+      .find(`> div:nth-child(${TASK_COLUMNS.DURATION})`)
+      .invoke("text")
+      .then((text) => {
+        expect(text.trim()).to.include(String(expectedDays));
+      });
+  }
+
+  verifyTaskDelayedByRow(rowIndex, expectedDays) {
+    cy.get(TASK.ganttRows)
+      .eq(rowIndex)
+      .find(`> div:nth-child(${TASK_COLUMNS.DELAYED})`)
+      .invoke("text")
+      .then((text) => {
+        expect(text.trim()).to.include(String(expectedDays));
+      });
+  }
+
+  verifyTaskEndDatesEqual(firstRowIndex, secondRowIndex) {
+    cy.get(TASK.ganttRows)
+      .eq(firstRowIndex)
+      .find(`> div:nth-child(${TASK_COLUMNS.END_DATE})`)
+      .invoke("text")
+      .then((firstEndDate) => {
+        cy.get(TASK.ganttRows)
+          .eq(secondRowIndex)
+          .find(`> div:nth-child(${TASK_COLUMNS.END_DATE})`)
+          .invoke("text")
+          .then((secondEndDate) => {
+            expect(secondEndDate.trim()).to.equal(firstEndDate.trim());
+          });
       });
   }
 
@@ -402,6 +462,35 @@ class TaskCreationPage {
 
   verifyTaskCount(expectedCount) {
     this.getTaskRows().should("have.length", expectedCount);
+  }
+
+  // In dhtmlx Gantt each row has one .gantt_tree_indent element.
+  // Top-level rows use width: 0px; children use width > 0px.
+  // Counting non-zero-width indents gives the number of child (nested) rows.
+  // Reads the selected task's start and end dates from the grid cells, simulates
+  // the app's weekend snap on the adjusted end, and returns the expected duration.
+  // Call this BEFORE adjustEndDate() to get the value for your assertion.
+  computeExpectedDurationAfterAdjust(daysOffset) {
+    return this.getSelectedTaskCell(TASK_COLUMNS.START_DATE)
+      .invoke("text")
+      .then((startText) => {
+        const start = parseDisplayDate(startText);
+        return this.getSelectedTaskCell(TASK_COLUMNS.END_DATE)
+          .invoke("text")
+          .then((endText) => {
+            const end = parseDisplayDate(endText);
+            const newEnd =
+              daysOffset < 0
+                ? prevWorkday(addDays(daysOffset, end))
+                : nextWorkday(addDays(daysOffset, end));
+            return diffCalendarDays(start, newEnd) + 1;
+          });
+      });
+  }
+
+  verifyIndentedTaskCount(expectedCount) {
+    cy.get(`${TASK.ganttRows} .gantt_tree_indent:not([style*="width: 0"])`)
+      .should("have.length", expectedCount);
   }
 }
 

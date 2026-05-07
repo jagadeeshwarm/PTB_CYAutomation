@@ -4,8 +4,11 @@ import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import sidePanelPage from "../../../pages/schedule/SidePanelPage";
 import {
-  dateOffsetMMDDYYYY,
-  dateTimeOffset,
+  addDays,
+  nextWorkday,
+  prevWorkday,
+  formatDateMMDDYYYY,
+  dateTimeFromDate,
   inputDateToTreeDate,
 } from "../../../support/utils/dateUtils";
 
@@ -90,9 +93,9 @@ describe("Schedule - Side Panel Task Editing", () => {
   it("Step 8: Click task → open side panel → change Start Date (today + 1 day, with time) → verify", () => {
     taskCreationPage.selectTask(RENAMED_TASK);
     sidePanelPage.open();
-    const newStart = dateTimeOffset(1); // "mm/dd/yyyy 09:00:00"
+    // Snap to next workday so the assertion matches what the app stores
+    const newStart = dateTimeFromDate(nextWorkday(addDays(1)), 9, 0, 0);
     sidePanelPage.setStartDateFromPanel(newStart);
-    // Tree displays as yyyy/mm/dd — convert for the assertion
     sidePanelPage.verifyStartDateInSelectedRow(
       inputDateToTreeDate(newStart.split(" ")[0]),
     );
@@ -100,7 +103,8 @@ describe("Schedule - Side Panel Task Editing", () => {
 
   it("Step 9: Change End Date (start date + 1 day, 17:00:00) and verify in tree view", () => {
     taskCreationPage.selectTask(RENAMED_TASK);
-    const newEnd = dateTimeOffset(2, 17); // "mm/dd/yyyy 17:00:00"
+    // End dates snap to previous workday (Friday) when they land on a weekend
+    const newEnd = dateTimeFromDate(prevWorkday(addDays(2)), 17, 0, 0);
     sidePanelPage.setEndDateFromPanel(newEnd);
     sidePanelPage.verifyEndDateInSelectedRow(
       inputDateToTreeDate(newEnd.split(" ")[0]),
@@ -118,7 +122,8 @@ describe("Schedule - Side Panel Task Editing", () => {
 
   it("Step 11: Change Constraint Date and verify in tree view", () => {
     taskCreationPage.selectTask(RENAMED_TASK);
-    const newConstraintDate = dateOffsetMMDDYYYY(2); // "mm/dd/yyyy"
+    // "Finish No Later Than" is a deadline-type constraint → snaps to prevWorkday
+    const newConstraintDate = formatDateMMDDYYYY(prevWorkday(addDays(2)));
     sidePanelPage.setConstraintDateFromPanel(newConstraintDate);
     sidePanelPage.verifyConstraintDateInSelectedRow(
       inputDateToTreeDate(newConstraintDate),
