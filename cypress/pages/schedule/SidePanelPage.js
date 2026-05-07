@@ -250,6 +250,170 @@ class SidePanelPage {
     );
   }
 
+  // --- Cash Flow tab ---
+
+  openCashFlowTab() {
+    cy.get(SIDEPANEL.cashFlowTabItem).click();
+    cy.wait(500);
+  }
+
+  setCashFlowForecast(amount) {
+    cy.get(SIDEPANEL.cashFlowForecastInput)
+      .type("{selectall}{backspace}")
+      .type(String(amount));
+    cy.wait(300);
+  }
+
+  clickCashFlowAddValue() {
+    cy.get(SIDEPANEL.cashFlowAddValueButton).click();
+    cy.wait(800);
+  }
+
+  // Parses a formatted currency string like "₹-1,000.00" or "₹600.00"
+  // into a plain float, preserving the sign.
+  _parseCurrencyText(text) {
+    const trimmed = text.trim();
+    const isNegative = trimmed.includes("-");
+    const numeric = parseFloat(trimmed.replace(/[^0-9.]/g, ""));
+    return isNegative ? -numeric : numeric;
+  }
+
+  verifyCashFlowReferenceAmount(expectedAmount) {
+    cy.get(SIDEPANEL.cashFlowReferenceAmount)
+      .invoke("text")
+      .then((text) => {
+        expect(this._parseCurrencyText(text)).to.equal(
+          parseFloat(String(expectedAmount)),
+        );
+      });
+  }
+
+  verifyCashFlowActualValue(expectedAmount) {
+    cy.get(SIDEPANEL.cashFlowActualValue)
+      .invoke("text")
+      .then((text) => {
+        expect(this._parseCurrencyText(text)).to.equal(
+          parseFloat(String(expectedAmount)),
+        );
+      });
+  }
+
+  // Clicks the month/year input inside the Add Value popup, then selects
+  // the first non-disabled month cell in the picker dropdown.
+  selectCashFlowPopupMonth() {
+    cy.get(SIDEPANEL.cashFlowPopupMonthInput).click({ force: true });
+    cy.wait(500);
+    cy.get(".ant-picker-cell:not(.ant-picker-cell-disabled)").first().click();
+    cy.wait(300);
+  }
+
+  setCashFlowPopupValue(amount) {
+    cy.get(SIDEPANEL.cashFlowPopupValueInput).type(String(amount));
+    cy.wait(300);
+  }
+
+  setCashFlowPopupNote(note) {
+    cy.get(SIDEPANEL.cashFlowPopupNoteInput)
+      .type("{selectall}{backspace}")
+      .type(note);
+    cy.wait(300);
+  }
+
+  confirmCashFlowPopup() {
+    cy.get(SIDEPANEL.cashFlowPopupConfirmButton).click();
+    cy.wait(800);
+  }
+
+  verifyCashFlowListEntryVisible() {
+    cy.get(SIDEPANEL.cashFlowListFirstEntry).should("be.visible");
+  }
+
+  clickCashFlowDeleteIcon() {
+    cy.get(SIDEPANEL.cashFlowDeleteIcon).click();
+    cy.wait(800);
+  }
+
+  clickCashFlowEditIcon() {
+    cy.get(SIDEPANEL.cashFlowEditIcon).click();
+    cy.wait(800);
+  }
+
+  // In the edit popup the month field is read-only — check disabled or readonly state
+  verifyCashFlowPopupMonthNotEditable() {
+    cy.get(SIDEPANEL.cashFlowPopupMonthInput).then(($el) => {
+      const isReadOnly =
+        $el.is("[disabled]") ||
+        $el.attr("readonly") !== undefined ||
+        $el.closest(".ant-picker-disabled").length > 0;
+      expect(isReadOnly, "Month field should not be editable").to.be.true;
+    });
+  }
+
+  // Clear the existing value in the edit popup and enter a new amount.
+  // Must use {selectall}{backspace} — .clear() sends {del} which fires the
+  // gantt's global "Delete Task" shortcut even while the modal is open.
+  editCashFlowPopupValue(amount) {
+    cy.get(SIDEPANEL.cashFlowPopupValueInput)
+      .type("{selectall}{backspace}")
+      .type(String(amount));
+    cy.wait(300);
+  }
+
+  // --- Predecessor (Link) tab ---
+
+  openPredecessorTab() {
+    cy.get(SIDEPANEL.predecessorTabItem).click();
+    cy.wait(500);
+  }
+
+  clickAddPredecessorButton() {
+    cy.get(SIDEPANEL.predecessorAddButton).click();
+    cy.wait(800);
+  }
+
+  // Opens the task-select dropdown in the predecessor modal, types the task ID
+  // into the search field, and clicks the first matching item in the list.
+  searchAndSelectPredecessorTask(taskId) {
+    cy.get(SIDEPANEL.predecessorModalTaskSelect).click();
+    cy.wait(300);
+    cy.get(SIDEPANEL.predecessorModalSearchInput).type(String(taskId), {
+      force: true,
+    });
+    cy.wait(500);
+    cy.get(SIDEPANEL.predecessorModalDropdownItem).first().click();
+    cy.wait(500);
+  }
+
+  setLagDays(days) {
+    cy.get(SIDEPANEL.predecessorModalLagInput)
+      .type("{selectall}{backspace}")
+      .type(String(days));
+    cy.wait(300);
+  }
+
+  // Clicks the predecessor-type card matching the given text (e.g. "Finish-Start").
+  // The UI renders "Finish - Start" (spaces around dash), so we use a loose regex.
+  // Click targets .ant-card-cover (the icon area) which is the reliable hit zone.
+  selectPredecessorType(typeText) {
+    const pattern = new RegExp(typeText.replace(/-/g, "[\\s\\-]+"), "i");
+    cy.contains(SIDEPANEL.predecessorModalTypeCard, pattern)
+      .find(".ant-card-cover")
+      .click();
+    cy.wait(300);
+  }
+
+  savePredecessorModal() {
+    cy.get(SIDEPANEL.predecessorModalSaveButton).click();
+    cy.wait(1000);
+  }
+
+  // Verifies the status cell at the given column index on the currently-selected row.
+  // Column 9 in the ganttWidthWithSide layout corresponds to STATUS when the
+  // Predecessor tab is active (fewer columns shown than in General Settings view).
+  verifyStatusInGanttRow(colIdx) {
+    cy.get(SIDEPANEL.selectedAnyRowCell(colIdx)).should("be.visible");
+  }
+
   // --- Disabled-state verification ---
 
   // Generic: assert any descendant has a disabled indicator
