@@ -260,7 +260,7 @@ class TaskCreationPage {
 
   editSelectedTaskNumber(columnIndex, value) {
     this.getSelectedTaskCell(columnIndex).dblclick();
-    cy.get(TASK.taskNumberInput).clear().type(`${value}{enter}`);
+    cy.get(TASK.taskNumberInput).type("{selectall}").type(`${value}{enter}`);
     cy.wait(500);
   }
 
@@ -509,6 +509,74 @@ class TaskCreationPage {
 
   getTaskCount() {
     return this.getTaskRows();
+  }
+
+  scrollGantt(position) {
+    cy.get("body").then(($body) => {
+      const $scrollbar = $body.find(TASK.ganttScrollbar);
+
+      if ($scrollbar.length > 0) {
+        cy.wrap($scrollbar.first()).scrollTo(position, {
+          ensureScrollable: false,
+        });
+      } else {
+        cy.get(TASK.ganttScrollbarFallback)
+          .first()
+          .scrollTo(position, { ensureScrollable: false });
+      }
+    });
+
+    cy.wait(500);
+  }
+
+  scrollGanttLeft() {
+    this.scrollGantt("left");
+  }
+
+  scrollGanttRight() {
+    this.scrollGantt("right");
+  }
+
+  selectTaskByRow(rowIndex) {
+    cy.get(TASK.ganttTaskRows).eq(rowIndex).click();
+    cy.wait(500);
+  }
+
+  getTaskCellByRowAndColumn(rowIndex, headerSelector) {
+    return this._getColIndex(headerSelector).then((colIndex) =>
+      cy.get(TASK.ganttTaskRows).eq(rowIndex).find(`> div:nth-child(${colIndex})`),
+    );
+  }
+
+  setPercentForSelectedTask(percent) {
+    this.scrollGanttLeft();
+    this.setPercent(percent);
+    this.scrollGanttRight();
+  }
+
+  setPercentForRow(rowIndex, percent) {
+    this.selectTaskByRow(rowIndex);
+    this.setPercentForSelectedTask(percent);
+  }
+
+  toggleOnHoldByRow(rowIndex) {
+    this.scrollGanttRight();
+    this.selectTaskByRow(rowIndex);
+    this.toggleOnHold();
+  }
+
+  verifyVisibleRowsByNameAndStatus(expectedTaskNames, expectedStatus) {
+    cy.get(TASK.ganttTaskRows).should("have.length", expectedTaskNames.length);
+    this.scrollGanttLeft();
+
+    expectedTaskNames.forEach((taskName, rowIndex) => {
+      cy.get(TASK.ganttTaskRows).eq(rowIndex).should("contain.text", taskName);
+    });
+
+    this.scrollGanttRight();
+    expectedTaskNames.forEach((_, rowIndex) => {
+      this.verifyTaskStatusByRow(rowIndex, expectedStatus);
+    });
   }
 
   verifyTaskCount(expectedCount) {

@@ -11,6 +11,10 @@ export const TASK = {
   ganttRows: ".gantt_grid_data .gantt_row:not(.gantt_row_empty)",
   ganttTaskRows: ".gantt_grid_data .gantt_row.gantt_row_task",
   ganttSelectedRow: ".gantt_grid_data .gantt_row.gantt_selected.gantt_row_task",
+  ganttScrollbar:
+    "body > app-root > div > div > app-main-layout > div:nth-child(2) > app-content-layout > app-content-layout > app-gantt-root > nz-spin > div > div > div.ant-row.gantt-container.ant-row-start > app-pss-gantt > div.gantt-height.ganttWidthWithoutSide > div > div.gantt_layout_cell.gantt_layout.gantt_layout_y.gridCell_cell.gantt_layout_cell_border_right > div.gantt_layout_cell.gridScroll_cell > div > div",
+  ganttScrollbarFallback:
+    "app-pss-gantt .gantt_layout_cell.gridScroll_cell > div > div",
 
   // Inline editor inputs
   taskInlineInput: '.gantt_grid_editor_placeholder input[type="text"]',
