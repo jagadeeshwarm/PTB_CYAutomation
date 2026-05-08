@@ -520,9 +520,13 @@ class TaskCreationPage {
           ensureScrollable: false,
         });
       } else {
-        cy.get(TASK.ganttScrollbarFallback)
-          .first()
-          .scrollTo(position, { ensureScrollable: false });
+        const $fallback = $body.find(TASK.ganttScrollbarFallback);
+        if ($fallback.length > 0) {
+          cy.wrap($fallback.first()).scrollTo(position, {
+            ensureScrollable: false,
+          });
+        }
+        // No scrollbar found — all columns are already visible, skip scroll
       }
     });
 
