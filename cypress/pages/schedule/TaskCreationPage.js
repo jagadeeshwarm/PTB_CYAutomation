@@ -1,11 +1,11 @@
-import { TASK, TASK_COLUMNS, COMMON } from "../../support/selectors";
+import { TASK, TASK_COLUMNS, TASK_COLUMN_HEADERS, COMMON } from "../../support/selectors";
 import {
   formatDate,
   addDays,
   parseDisplayDate,
   nextWorkday,
   prevWorkday,
-  diffCalendarDays,
+  diffWorkingDays,
 } from "../../support/utils/dateUtils";
 
 class TaskCreationPage {
@@ -239,6 +239,14 @@ class TaskCreationPage {
     return cy.get(`${TASK.ganttSelectedRow} > div:nth-child(${columnIndex})`);
   }
 
+  // Dynamically resolves the 1-based column index by reading the header element's
+  // sibling position. Yields the index into the Cypress chain so callers can use it
+  // inside a .then() callback without breaking Cypress's async model.
+  // Usage: this._getColIndex(TASK_COLUMN_HEADERS.START_DATE).then(idx => { ... })
+  _getColIndex(headerSelector) {
+    return cy.get(headerSelector).invoke("index").then((i) => i + 1);
+  }
+
   editSelectedTaskDate(columnIndex, dateValue) {
     // Native <input type="date"> requires YYYY-MM-DD for cy.type(),
     // and rejects {enter}. Commit by clicking on the task name cell
@@ -263,54 +271,79 @@ class TaskCreationPage {
   }
 
   setStartDate(dateValue) {
-    this.editSelectedTaskDate(TASK_COLUMNS.START_DATE, dateValue);
+    // Resolve column position from the header element so the index stays
+    // correct even if columns are reordered or hidden
+    this._getColIndex(TASK_COLUMN_HEADERS.START_DATE).then((colIndex) => {
+      this.getSelectedTaskCell(colIndex).dblclick();
+      cy.get(TASK.taskDateInput).clear();
+      cy.get(TASK.taskDateInput).type(dateValue);
+      this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
+      cy.wait(500);
+    });
   }
 
   setEndDate(dateValue) {
-    this.editSelectedTaskDate(TASK_COLUMNS.END_DATE, dateValue);
+    this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((colIndex) => {
+      this.getSelectedTaskCell(colIndex).dblclick();
+      cy.get(TASK.taskDateInput).clear();
+      cy.get(TASK.taskDateInput).type(dateValue);
+      this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
+      cy.wait(500);
+    });
   }
 
   // Read the current end date from the cell and offset it by N days
   adjustEndDate(daysOffset) {
-    this.getSelectedTaskCell(TASK_COLUMNS.END_DATE)
-      .invoke("text")
-      .then((currentText) => {
-        const newDate = formatDate(
-          addDays(daysOffset, parseDisplayDate(currentText)),
-        );
-        this.setEndDate(newDate);
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((colIndex) => {
+      this.getSelectedTaskCell(colIndex)
+        .invoke("text")
+        .then((currentText) => {
+          const newDate = formatDate(
+            addDays(daysOffset, parseDisplayDate(currentText)),
+          );
+          this.setEndDate(newDate);
+        });
+    });
   }
 
   adjustStartDate(daysOffset) {
-    this.getSelectedTaskCell(TASK_COLUMNS.START_DATE)
-      .invoke("text")
-      .then((currentText) => {
-        const newDate = formatDate(
-          addDays(daysOffset, parseDisplayDate(currentText)),
-        );
-        this.setStartDate(newDate);
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.START_DATE).then((colIndex) => {
+      this.getSelectedTaskCell(colIndex)
+        .invoke("text")
+        .then((currentText) => {
+          const newDate = formatDate(
+            addDays(daysOffset, parseDisplayDate(currentText)),
+          );
+          this.setStartDate(newDate);
+        });
+    });
   }
 
   setDuration(days) {
-    this.editSelectedTaskText(TASK_COLUMNS.DURATION, days);
+    this._getColIndex(TASK_COLUMN_HEADERS.DURATION).then((colIndex) => {
+      this.editSelectedTaskText(colIndex, days);
+    });
   }
 
   setPercent(percent) {
-    this.editSelectedTaskNumber(TASK_COLUMNS.PERCENT, percent);
+    this._getColIndex(TASK_COLUMN_HEADERS.PERCENT).then((colIndex) => {
+      this.editSelectedTaskNumber(colIndex, percent);
+    });
   }
 
   toggleOnHold() {
-    // The On Hold checkbox sits inside the cell — click the inner wrapper
-    this.getSelectedTaskCell(TASK_COLUMNS.ON_HOLD).find("div > div").click();
-    cy.wait(500);
+    this._getColIndex(TASK_COLUMN_HEADERS.ON_HOLD).then((colIndex) => {
+      this.getSelectedTaskCell(colIndex).find("div > div").click();
+      cy.wait(500);
+    });
   }
 
   // --- Status helpers ---
 
   getSelectedTaskStatus() {
-    return this.getSelectedTaskCell(TASK_COLUMNS.STATUS);
+    return this._getColIndex(TASK_COLUMN_HEADERS.STATUS).then((colIndex) =>
+      cy.get(`${TASK.ganttSelectedRow} > div:nth-child(${colIndex})`),
+    );
   }
 
   // Status verification using data-column-index attr — used after closing
@@ -341,78 +374,91 @@ class TaskCreationPage {
   }
 
   verifyTaskStatusByRow(rowIndex, expectedStatus) {
-    cy.get(TASK.ganttRows)
-      .eq(rowIndex)
-      .find(`> div:nth-child(${TASK_COLUMNS.STATUS})`)
-      .invoke("text")
-      .then((text) => {
-        const trimmedText = text.trim();
-        if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
-          expect(trimmedText).to.equal("");
-        } else {
-          expect(trimmedText.toUpperCase()).to.include(
-            expectedStatus.toUpperCase(),
-          );
-        }
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.STATUS).then((colIndex) => {
+      cy.get(TASK.ganttRows)
+        .eq(rowIndex)
+        .find(`> div:nth-child(${colIndex})`)
+        .invoke("text")
+        .then((text) => {
+          const trimmedText = text.trim();
+          if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
+            expect(trimmedText).to.equal("");
+          } else {
+            expect(trimmedText.toUpperCase()).to.include(
+              expectedStatus.toUpperCase(),
+            );
+          }
+        });
+    });
   }
 
   verifyTaskPercentByRow(rowIndex, expectedPercent) {
-    cy.get(TASK.ganttRows)
-      .eq(rowIndex)
-      .find(`> div:nth-child(${TASK_COLUMNS.PERCENT})`)
-      .invoke("text")
-      .then((text) => {
-        expect(text.trim()).to.include(String(expectedPercent));
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.PERCENT).then((colIndex) => {
+      cy.get(TASK.ganttRows)
+        .eq(rowIndex)
+        .find(`> div:nth-child(${colIndex})`)
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim()).to.include(String(expectedPercent));
+        });
+    });
   }
 
   verifyTaskDurationByRow(rowIndex, expectedDays) {
-    cy.get(TASK.ganttRows)
-      .eq(rowIndex)
-      .find(`> div:nth-child(${TASK_COLUMNS.DURATION})`)
-      .invoke("text")
-      .then((text) => {
-        expect(text.trim()).to.include(String(expectedDays));
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.DURATION).then((colIndex) => {
+      cy.get(TASK.ganttRows)
+        .eq(rowIndex)
+        .find(`> div:nth-child(${colIndex})`)
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim()).to.include(String(expectedDays));
+        });
+    });
   }
 
   verifyTaskDelayedByRow(rowIndex, expectedDays) {
-    cy.get(TASK.ganttRows)
-      .eq(rowIndex)
-      .find(`> div:nth-child(${TASK_COLUMNS.DELAYED})`)
-      .invoke("text")
-      .then((text) => {
-        expect(text.trim()).to.include(String(expectedDays));
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.DELAYED).then((colIndex) => {
+      cy.get(TASK.ganttRows)
+        .eq(rowIndex)
+        .find(`> div:nth-child(${colIndex})`)
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim()).to.include(String(expectedDays));
+        });
+    });
   }
 
   verifyTaskEndDatesEqual(firstRowIndex, secondRowIndex) {
-    cy.get(TASK.ganttRows)
-      .eq(firstRowIndex)
-      .find(`> div:nth-child(${TASK_COLUMNS.END_DATE})`)
-      .invoke("text")
-      .then((firstEndDate) => {
-        cy.get(TASK.ganttRows)
-          .eq(secondRowIndex)
-          .find(`> div:nth-child(${TASK_COLUMNS.END_DATE})`)
-          .invoke("text")
-          .then((secondEndDate) => {
-            expect(secondEndDate.trim()).to.equal(firstEndDate.trim());
-          });
-      });
+    this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((colIndex) => {
+      cy.get(TASK.ganttRows)
+        .eq(firstRowIndex)
+        .find(`> div:nth-child(${colIndex})`)
+        .invoke("text")
+        .then((firstEndDate) => {
+          cy.get(TASK.ganttRows)
+            .eq(secondRowIndex)
+            .find(`> div:nth-child(${colIndex})`)
+            .invoke("text")
+            .then((secondEndDate) => {
+              expect(secondEndDate.trim()).to.equal(firstEndDate.trim());
+            });
+        });
+    });
   }
 
   // Verify status across every task row (e.g. parent + children)
   verifyAllTasksStatus(expectedStatus) {
-    const statusSelector = `${TASK.ganttTaskRows} > div:nth-child(${TASK_COLUMNS.STATUS}) > div`;
-    cy.get(statusSelector).each(($el) => {
-      const text = $el.text().trim();
-      if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
-        expect(text).to.equal("");
-      } else {
-        expect(text.toUpperCase()).to.include(expectedStatus.toUpperCase());
-      }
+    this._getColIndex(TASK_COLUMN_HEADERS.STATUS).then((colIndex) => {
+      cy.get(`${TASK.ganttTaskRows} > div:nth-child(${colIndex}) > div`).each(
+        ($el) => {
+          const text = $el.text().trim();
+          if (!expectedStatus || expectedStatus.toUpperCase() === "BLANK") {
+            expect(text).to.equal("");
+          } else {
+            expect(text.toUpperCase()).to.include(expectedStatus.toUpperCase());
+          }
+        },
+      );
     });
   }
 
@@ -429,16 +475,21 @@ class TaskCreationPage {
   }
 
   verifyDuration(expectedDays) {
-    this.getSelectedTaskCell(TASK_COLUMNS.DURATION).should(
-      "contain.text",
-      String(expectedDays),
-    );
+    this._getColIndex(TASK_COLUMN_HEADERS.DURATION).then((colIndex) => {
+      this.getSelectedTaskCell(colIndex).should(
+        "contain.text",
+        String(expectedDays),
+      );
+    });
   }
 
   verifyAllTasksDuration(expectedDays) {
-    const durationSelector = `${TASK.ganttTaskRows} > div:nth-child(${TASK_COLUMNS.DURATION})`;
-    cy.get(durationSelector).each(($el) => {
-      expect($el.text().trim()).to.include(String(expectedDays));
+    this._getColIndex(TASK_COLUMN_HEADERS.DURATION).then((colIndex) => {
+      cy.get(`${TASK.ganttTaskRows} > div:nth-child(${colIndex})`).each(
+        ($el) => {
+          expect($el.text().trim()).to.include(String(expectedDays));
+        },
+      );
     });
   }
 
@@ -471,26 +522,52 @@ class TaskCreationPage {
   // the app's weekend snap on the adjusted end, and returns the expected duration.
   // Call this BEFORE adjustEndDate() to get the value for your assertion.
   computeExpectedDurationAfterAdjust(daysOffset) {
-    return this.getSelectedTaskCell(TASK_COLUMNS.START_DATE)
-      .invoke("text")
-      .then((startText) => {
-        const start = parseDisplayDate(startText);
-        return this.getSelectedTaskCell(TASK_COLUMNS.END_DATE)
-          .invoke("text")
-          .then((endText) => {
-            const end = parseDisplayDate(endText);
-            const newEnd =
-              daysOffset < 0
-                ? prevWorkday(addDays(daysOffset, end))
-                : nextWorkday(addDays(daysOffset, end));
-            return diffCalendarDays(start, newEnd) + 1;
-          });
-      });
+    return this._getColIndex(TASK_COLUMN_HEADERS.START_DATE).then(
+      (startColIdx) => {
+        return this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then(
+          (endColIdx) => {
+            return this.getSelectedTaskCell(startColIdx)
+              .invoke("text")
+              .then((startText) => {
+                const start = parseDisplayDate(startText);
+                return this.getSelectedTaskCell(endColIdx)
+                  .invoke("text")
+                  .then((endText) => {
+                    const end = parseDisplayDate(endText);
+                    const newEnd =
+                      daysOffset < 0
+                        ? prevWorkday(addDays(daysOffset, end))
+                        : nextWorkday(addDays(daysOffset, end));
+                    return diffWorkingDays(start, newEnd);
+                  });
+              });
+          },
+        );
+      },
+    );
   }
 
   verifyIndentedTaskCount(expectedCount) {
     cy.get(`${TASK.ganttRows} .gantt_tree_indent:not([style*="width: 0"])`)
       .should("have.length", expectedCount);
+  }
+
+  // --- Indent / Outdent via right-click context menu ---
+
+  outdentTaskAtRow(rowIndex) {
+    this.getTaskRows().eq(rowIndex).click();
+    cy.wait(300);
+    this.getTaskRows().eq(rowIndex).rightclick();
+    cy.wait(500);
+    cy.contains(".cdk-overlay-container li", /outdent/i).click();
+    cy.wait(800);
+  }
+
+  indentTaskAtRow(rowIndex) {
+    this.getTaskRows().eq(rowIndex).click();
+    cy.wait(300);
+    cy.get('[name="indent"] > .iconspan').click();
+    cy.wait(800);
   }
 }
 

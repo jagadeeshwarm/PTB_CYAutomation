@@ -279,7 +279,9 @@ class SidePanelPage {
   }
 
   verifyCashFlowReferenceAmount(expectedAmount) {
+    // .first() prevents multiple-span concatenation (e.g. "₹900.001" from two spans)
     cy.get(SIDEPANEL.cashFlowReferenceAmount)
+      .first()
       .invoke("text")
       .then((text) => {
         expect(this._parseCurrencyText(text)).to.equal(
@@ -290,6 +292,7 @@ class SidePanelPage {
 
   verifyCashFlowActualValue(expectedAmount) {
     cy.get(SIDEPANEL.cashFlowActualValue)
+      .first()
       .invoke("text")
       .then((text) => {
         expect(this._parseCurrencyText(text)).to.equal(
@@ -353,10 +356,13 @@ class SidePanelPage {
   // Must use {selectall}{backspace} — .clear() sends {del} which fires the
   // gantt's global "Delete Task" shortcut even while the modal is open.
   editCashFlowPopupValue(amount) {
+    // Triple-click selects all existing text reliably, then backspace clears it
     cy.get(SIDEPANEL.cashFlowPopupValueInput)
-      .type("{selectall}{backspace}")
+      .click()
+      .type("{selectall}")
+      .type("{backspace}")
       .type(String(amount));
-    cy.wait(300);
+    cy.wait(500);
   }
 
   // --- Predecessor (Link) tab ---
@@ -446,6 +452,83 @@ class SidePanelPage {
   verifyConstraintsNotEditable() {
     this.verifyConstraintTypeNotEditable();
     this.verifyConstraintDateNotEditable();
+  }
+
+  // --- Cash Flow editable state ---
+
+  verifyCashFlowForecastEditable() {
+    cy.get(SIDEPANEL.cashFlowForecastInput).then(($el) => {
+      expect(
+        $el.is("[disabled]") || $el.attr("readonly") !== undefined,
+        "Cashflow forecast input should be editable",
+      ).to.be.false;
+    });
+  }
+
+  verifyCashFlowForecastNotEditable() {
+    cy.get(SIDEPANEL.cashFlowForecastInput).then(($el) => {
+      const isReadOnly =
+        $el.is("[disabled]") ||
+        $el.attr("readonly") !== undefined ||
+        $el.closest(".ant-input-number-disabled, .ant-input-disabled").length > 0;
+      expect(isReadOnly, "Cashflow forecast input should not be editable").to.be.true;
+    });
+  }
+
+  verifyCashFlowReferenceVisible() {
+    cy.get(SIDEPANEL.cashFlowReferenceAmount).should("be.visible");
+  }
+
+  // --- Resources tab ---
+
+  openResourcesTab() {
+    cy.get(SIDEPANEL.resourcesTabItem).click();
+    cy.wait(500);
+  }
+
+  clickResourcesAddButton() {
+    cy.get(SIDEPANEL.resourcesAddButton).click();
+    cy.wait(800);
+  }
+
+  selectResource(resourceName) {
+    cy.get(SIDEPANEL.resourcesPopupDropdown).click();
+    cy.wait(500);
+    cy.get(SIDEPANEL.resourcesDropdownList)
+      .contains("li", resourceName)
+      .click();
+    cy.wait(500);
+  }
+
+  setResourceAllocation(percent) {
+    cy.get(SIDEPANEL.resourcesPopupAllocationInput)
+      .type("{selectall}{backspace}")
+      .type(String(percent));
+    cy.wait(300);
+  }
+
+  saveResourceAllocation() {
+    cy.get(SIDEPANEL.resourcesPopupSaveButton).click();
+    cy.wait(1000);
+  }
+
+  // Verify the Cash Flow tab icon is NOT present in the side panel tab nav
+  // (Non-PM users should not see this tab)
+  verifyNoCashFlowTab() {
+    cy.get(SIDEPANEL.sidePanelTabsNav).within(() => {
+      cy.get(SIDEPANEL.cashFlowTabItem).should("not.exist");
+    });
+  }
+
+  verifyResourceInList() {
+    // Click the section title to expand / reveal the resource list
+    cy.get(SIDEPANEL.resourcesSectionTitle).click();
+    cy.wait(500);
+
+    // Verify the first item in the list is visible and contains a name
+    cy.get(SIDEPANEL.resourcesListFirstItem)
+      .should("be.visible")
+      .and("not.be.empty");
   }
 }
 

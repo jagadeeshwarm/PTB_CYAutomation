@@ -17,4 +17,8 @@ export const COMMON = {
   // Notifications
   notificationClose: ".ant-notification-close",
   releaseModalCookie: "a.release-modal-cookie",
+
+  // User nav — logout flow
+  userMenuTrigger: "app-ptob-user-image > div",
+  logoutButton: "app-user-overflow-menu div.user-project-info > button",
 };

@@ -2,5 +2,9 @@
   "testUser": {
     "email": "testm@yopmail.com",
     "password": "Password1234!"
+  },
+  "nonPmUser": {
+    "email": "jagatest12@yopmail.com",
+    "password": "Password1234!"
   }
 }

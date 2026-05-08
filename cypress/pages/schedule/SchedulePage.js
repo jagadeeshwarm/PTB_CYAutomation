@@ -81,6 +81,14 @@ class SchedulePage {
     cy.wait(500);
   }
 
+  openScheduleByName(scheduleName) {
+    this.scheduleListTable
+      .contains(SCHEDULE.scheduleNameCell, scheduleName)
+      .scrollIntoView()
+      .dblclick();
+    cy.wait(2000);
+  }
+
   // --- Schedule deletion ---
 
   confirmScheduleDelete() {

@@ -103,8 +103,9 @@ describe("Schedule - Side Panel Task Editing", () => {
 
   it("Step 9: Change End Date (start date + 1 day, 17:00:00) and verify in tree view", () => {
     taskCreationPage.selectTask(RENAMED_TASK);
-    // End dates snap to previous workday (Friday) when they land on a weekend
-    const newEnd = dateTimeFromDate(prevWorkday(addDays(2)), 17, 0, 0);
+    // End date = current start date + 1 day (relative to the start set in Step 8)
+    const startDate = nextWorkday(addDays(1)); // same base as Step 8
+    const newEnd = dateTimeFromDate(prevWorkday(addDays(1, startDate)), 17, 0, 0);
     sidePanelPage.setEndDateFromPanel(newEnd);
     sidePanelPage.verifyEndDateInSelectedRow(
       inputDateToTreeDate(newEnd.split(" ")[0]),

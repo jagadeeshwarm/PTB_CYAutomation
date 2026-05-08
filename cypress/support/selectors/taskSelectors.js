@@ -44,7 +44,7 @@ export const TASK = {
 };
 
 // Column indices in the Gantt grid (1-based, matches :nth-child).
-// Adjust these if your application's column layout differs.
+// These are fallback values only — prefer dynamic resolution via TASK_COLUMN_HEADERS.
 export const TASK_COLUMNS = {
   ID: 3,
   NAME: 4,
@@ -55,4 +55,17 @@ export const TASK_COLUMNS = {
   STATUS: 12,
   DELAYED: 13,
   ON_HOLD: 14,
+};
+
+// Gantt column header class selectors — used to resolve the real column index
+// at runtime so tests stay correct even when columns are reordered or hidden.
+export const TASK_COLUMN_HEADERS = {
+  DURATION:  ".gantt_grid_head_DurationString",
+  START_DATE: ".gantt_grid_head_start_date",
+  END_DATE:  ".gantt_grid_head_end_date",
+  PERCENT:   ".gantt_grid_head_progress",
+  LINK:      ".gantt_grid_head_Predecessor",
+  STATUS:    ".gantt_grid_head_Status",
+  ON_HOLD:   ".gantt_grid_head_OnHold",
+  DELAYED:   ".gantt_grid_head_DelayedInDays",
 };

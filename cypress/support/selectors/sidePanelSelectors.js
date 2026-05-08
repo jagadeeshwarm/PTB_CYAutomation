@@ -75,22 +75,25 @@ export const SIDEPANEL = {
   cashFlowTabItem: ".iconUILarge-Cost",
 
   // Cash Flow panel fields — all scoped to app-cash-flow-side-panel
+  // Exact paths confirmed from live DOM inspection
   cashFlowForecastInput:
     "app-cash-flow-side-panel div:nth-child(3) cmacs-form-control input",
+  // > div > div > span drills to the single value span, avoiding multi-span concatenation
   cashFlowReferenceAmount:
-    "app-cash-flow-side-panel div:nth-child(2) cmacs-form-control span",
+    "app-cash-flow-side-panel div:nth-child(2) cmacs-form-control > div > div > span",
   cashFlowActualValue:
-    "app-cash-flow-side-panel div:nth-child(4) cmacs-form-control span",
+    "app-cash-flow-side-panel div:nth-child(4) cmacs-form-control > div > div > span",
   cashFlowAddValueButton:
-    "app-cash-flow-side-panel .cashflow-action-buttons button",
+    "app-cash-flow-side-panel div.section-content.cashflow-action-buttons > button",
 
-  // Add Value popup (nz-modal-container is stable; cdk-overlay IDs are not)
+  // Add / Edit Value popup — cdk-overlay ID is dynamic; nz-modal-container is stable
   cashFlowPopupMonthInput:
     "nz-modal-container .ant-modal-body div:nth-child(1) cmacs-month-picker input",
+  // Direct child (>) ensures only the Value input is matched, not the nested month-picker input
   cashFlowPopupValueInput:
-    "nz-modal-container .ant-modal-body :nth-child(2) > .ant-input",
+    "nz-modal-container .ant-modal-body div:nth-child(2) > input",
   cashFlowPopupNoteInput:
-    "nz-modal-container .ant-modal-body div:nth-child(3) input",
+    "nz-modal-container .ant-modal-body div:nth-child(3) > input",
   cashFlowPopupConfirmButton:
     "nz-modal-container .ant-modal-footer button.ant-btn-primary",
 
@@ -112,4 +115,30 @@ export const SIDEPANEL = {
     "cmacs-modal .cmacs-modal-helpful-center-panel cmacs-input-number input",
   predecessorModalTypeCard: "cmacs-modal .ant-modal-body cmacs-card",
   predecessorModalSaveButton: ".helpful-footer button.ant-btn-primary",
+
+  // --- Resources tab ---
+  // 3rd tab in the side panel tabset
+  resourcesTabItem: ":nth-child(3) > .ant-tabs-tab-btn",
+
+  // Resources panel — Add button
+  resourcesAddButton:
+    ".resourceheader > .ant-row > .ant-col > .ant-btn",
+
+  // Resource allocation popup (cmacs-modal with dynamic cdk-overlay ID — use stable ancestors)
+  resourcesPopupDropdown:
+    "cmacs-modal .ant-modal-body .cmacs-modal-helpful-center-panel div:nth-child(1) cmacs-select",
+  resourcesDropdownList:
+    ".cdk-overlay-container .ant-select-dropdown ul",
+  resourcesPopupAllocationInput:
+    "cmacs-modal .ant-modal-body .cmacs-modal-helpful-center-panel div:nth-child(2) cmacs-input-number input",
+  resourcesPopupSaveButton: ".helpful-footer button.ant-btn-primary",
+
+  // Resources verification — click the section title, then check the first list entry
+  resourcesSectionTitle: ".sectiontitle",
+  resourcesListFirstItem:
+    ".section-content > :nth-child(1) > .text-overflow-ellipsis",
+
+  // Tab nav wrapper — used to assert which tabs are (or are not) present
+  sidePanelTabsNav:
+    "app-pss-prop-side-panel cmacs-tabs-nav > div > div",
 };

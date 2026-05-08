@@ -92,6 +92,20 @@ export const diffCalendarDays = (d1, d2) => {
   return Math.round((norm(d2) - norm(d1)) / (24 * 60 * 60 * 1000));
 };
 
+// Working-day count between d1 and d2, inclusive of both endpoints.
+// Mirrors the gantt's "duration" display which counts Mon–Fri only.
+export const diffWorkingDays = (d1, d2) => {
+  let count = 0;
+  const current = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+  const end = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+  while (current <= end) {
+    const day = current.getDay();
+    if (day !== 0 && day !== 6) count++;
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+};
+
 // Format a Date object as "mm/dd/yyyy hh:mm:ss" for side-panel datetime inputs.
 export const dateTimeFromDate = (date, hours = 9, minutes = 0, seconds = 0) => {
   const d = new Date(date);
