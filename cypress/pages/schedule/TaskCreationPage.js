@@ -247,13 +247,27 @@ class TaskCreationPage {
     return cy.get(headerSelector).invoke("index").then((i) => i + 1);
   }
 
+  _getColIndexByHeaderText(headerText) {
+    return cy.get(".gantt_grid_head_cell").then(($headers) => {
+      const normalizedHeaderText = headerText.trim().toLowerCase();
+      const columnIndex = [...$headers].findIndex((header) =>
+        header.innerText.trim().toLowerCase().includes(normalizedHeaderText),
+      );
+
+      expect(columnIndex, `${headerText} column index`).to.be.greaterThan(-1);
+      return columnIndex + 1;
+    });
+  }
+
   editSelectedTaskDate(columnIndex, dateValue) {
     // Native <input type="date"> requires YYYY-MM-DD for cy.type(),
-    // and rejects {enter}. Commit by clicking on the task name cell
-    // (any other cell) to blur the date input.
+    // and rejects special keys like {selectall}. Set the value directly and
+    // trigger change events, then commit by clicking the task name cell.
     this.getSelectedTaskCell(columnIndex).dblclick();
-    cy.get(TASK.taskDateInput).clear();
-    cy.get(TASK.taskDateInput).type(dateValue);
+    cy.get(TASK.taskDateInput)
+      .invoke("val", dateValue)
+      .trigger("input")
+      .trigger("change");
     this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
     cy.wait(500)
   }
@@ -275,8 +289,10 @@ class TaskCreationPage {
     // correct even if columns are reordered or hidden
     this._getColIndex(TASK_COLUMN_HEADERS.START_DATE).then((colIndex) => {
       this.getSelectedTaskCell(colIndex).dblclick();
-      cy.get(TASK.taskDateInput).clear();
-      cy.get(TASK.taskDateInput).type(dateValue);
+      cy.get(TASK.taskDateInput)
+        .invoke("val", dateValue)
+        .trigger("input")
+        .trigger("change");
       this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
       cy.wait(500);
     });
@@ -285,8 +301,10 @@ class TaskCreationPage {
   setEndDate(dateValue) {
     this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((colIndex) => {
       this.getSelectedTaskCell(colIndex).dblclick();
-      cy.get(TASK.taskDateInput).clear();
-      cy.get(TASK.taskDateInput).type(dateValue);
+      cy.get(TASK.taskDateInput)
+        .invoke("val", dateValue)
+        .trigger("input")
+        .trigger("change");
       this.getSelectedTaskCell(TASK_COLUMNS.NAME).click();
       cy.wait(500);
     });
@@ -563,10 +581,69 @@ class TaskCreationPage {
     this.setPercentForSelectedTask(percent);
   }
 
+  setStartDateForRow(rowIndex, dateValue) {
+    this.selectTaskByRow(rowIndex);
+    this.scrollGanttLeft();
+    this.setStartDate(dateValue);
+    this.scrollGanttRight();
+  }
+
+  adjustStartAndEndDatesForRow(rowIndex, startDaysOffset, endDaysOffset) {
+    this.selectTaskByRow(rowIndex);
+    this.scrollGanttLeft();
+
+    this._getColIndex(TASK_COLUMN_HEADERS.START_DATE).then((startColIndex) => {
+      this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((endColIndex) => {
+        this.getSelectedTaskCell(startColIndex)
+          .invoke("text")
+          .then((currentStartDate) => {
+            this.getSelectedTaskCell(endColIndex)
+              .invoke("text")
+              .then((currentEndDate) => {
+                const updatedStartDate = formatDate(
+                  addDays(startDaysOffset, parseDisplayDate(currentStartDate)),
+                );
+                const updatedEndDate = formatDate(
+                  addDays(endDaysOffset, parseDisplayDate(currentEndDate)),
+                );
+
+                this.setStartDate(updatedStartDate);
+                this.setEndDate(updatedEndDate);
+                this.scrollGanttRight();
+              });
+          });
+      });
+    });
+  }
+
   toggleOnHoldByRow(rowIndex) {
     this.scrollGanttRight();
     this.selectTaskByRow(rowIndex);
     this.toggleOnHold();
+  }
+
+  togglePublicByRow(rowIndex) {
+    this.scrollGanttRight();
+    this.selectTaskByRow(rowIndex);
+
+    this._getColIndexByHeaderText("PUBLIC").then((colIndex) => {
+      cy.get(TASK.ganttTaskRows)
+        .eq(rowIndex)
+        .find(`> div:nth-child(${colIndex})`)
+        .find("input, div > div")
+        .first()
+        .click();
+      cy.wait(500);
+    });
+  }
+
+  verifyVisibleRowsByName(expectedTaskNames) {
+    cy.get(TASK.ganttTaskRows).should("have.length", expectedTaskNames.length);
+    this.scrollGanttLeft();
+
+    expectedTaskNames.forEach((taskName, rowIndex) => {
+      cy.get(TASK.ganttTaskRows).eq(rowIndex).should("contain.text", taskName);
+    });
   }
 
   verifyVisibleRowsByNameAndStatus(expectedTaskNames, expectedStatus) {

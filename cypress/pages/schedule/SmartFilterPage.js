@@ -6,13 +6,13 @@ class SmartFilterPage {
     cy.get(SMART_FILTER.filterPopup).should("be.visible");
   }
 
-  selectFilterValue(filterValue) {
+  selectFilterValue(searchText, optionText = searchText) {
     cy.get(SMART_FILTER.filterSelectionDropdown).click();
     cy.get(SMART_FILTER.filterSearchInput)
       .should("be.visible")
-      .type(`{selectall}${filterValue}`);
+      .type(`{selectall}${searchText}`);
 
-    cy.contains(SMART_FILTER.filterOption, filterValue)
+    cy.contains(SMART_FILTER.filterOption, optionText)
       .should("be.visible")
       .click();
   }
@@ -36,9 +36,9 @@ class SmartFilterPage {
     cy.wait(1000);
   }
 
-  applyFilter(filterValue) {
+  applyFilter(searchText, optionText = searchText) {
     this.open();
-    this.selectFilterValue(filterValue);
+    this.selectFilterValue(searchText, optionText);
     this.apply();
     this.closePopup();
   }
