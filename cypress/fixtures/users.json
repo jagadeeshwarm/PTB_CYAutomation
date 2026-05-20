@@ -1,10 +1,10 @@
 {
   "testUser": {
-    "email": "testm@yopmail.com",
+    "email": "testmj@yopmail.com",
     "password": "Password1234!"
   },
   "nonPmUser": {
-    "email": "jagatest12@yopmail.com",
+    "email": "usermj@yopmail.com",
     "password": "Password1234!"
   }
 }
