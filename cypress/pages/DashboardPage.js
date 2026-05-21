@@ -46,7 +46,7 @@ class DashboardPage {
 
   closePopupIfPresent() {
     cy.get("body").then(($body) => {
-      const $closeBtn = $body.find('[class*="iconuismall-close" i]:visible');
+      const $closeBtn = $body.find('[class*="iconuismall-close"]:visible');
       if ($closeBtn.length > 0) {
         cy.wrap($closeBtn.first()).click();
         cy.wait(500);

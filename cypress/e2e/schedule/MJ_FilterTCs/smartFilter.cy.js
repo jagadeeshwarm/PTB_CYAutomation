@@ -145,4 +145,10 @@ describe("Schedule - Smart Filters", () => {
       taskNames: PUBLIC_TASKS,
     });
   });
+
+  it("Step 11: Go back to schedule list → Delete the created schedule → Validate deleted", () => {
+    schedulePage.goBackToScheduleList();
+    schedulePage.deleteScheduleByName(SCHEDULE_NAME);
+    schedulePage.verifyScheduleDoesNotExist(SCHEDULE_NAME);
+  });
 });
