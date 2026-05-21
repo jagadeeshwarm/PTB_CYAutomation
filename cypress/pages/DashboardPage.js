@@ -14,16 +14,16 @@ class DashboardPage {
     cy.wait(2000);
   }
 
-  closeDefaultFavorites() {
-    cy.get("body").then(($body) => {
-      const $favoritesTag = $body
-        .find(DASHBOARD.defaultFavoritesTag)
-        .filter(":visible");
+  waitForPageLoad() {
+    cy.get(DASHBOARD.projectListHeader, { timeout: 15000 }).should("exist");
+    cy.wait(1000);
+  }
 
-      if ($favoritesTag.length > 0) {
-        cy.wrap($favoritesTag.first())
-          .find(DASHBOARD.defaultFavoritesCloseIcon)
-          .click();
+  closeFavoritesIfPresent() {
+    cy.get("body").then(($body) => {
+      const $closeBtn = $body.find(".iconUISmall-Close:visible");
+      if ($closeBtn.length > 0) {
+        cy.wrap($closeBtn.first()).click();
         cy.wait(500);
       }
     });
@@ -44,19 +44,9 @@ class DashboardPage {
     cy.wait(2000);
   }
 
-  closePopupIfPresent() {
-    cy.get("body").then(($body) => {
-      const $closeBtn = $body.find('[class*="iconuismall-close"]:visible');
-      if ($closeBtn.length > 0) {
-        cy.wrap($closeBtn.first()).click();
-        cy.wait(500);
-      }
-    });
-  }
-
   openProjectBySearch(projectName) {
-    this.closeDefaultFavorites();
-    this.closePopupIfPresent();
+    this.waitForPageLoad();
+    this.closeFavoritesIfPresent();
     this.searchProject(projectName);
     this.openSearchedProject(projectName);
   }
