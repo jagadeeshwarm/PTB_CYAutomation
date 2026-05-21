@@ -44,6 +44,15 @@ class DashboardPage {
     cy.wait(2000);
   }
 
+  closePopupIfPresent() {
+    cy.get("body").then(($body) => {
+      const $closeBtn = $body.find('[class*="iconuismall-close"]:visible');
+      if ($closeBtn.length > 0) {
+        cy.wrap($closeBtn.first()).click();
+        cy.wait(500);
+      }
+    });
+  }
 
   openProjectBySearch(projectName) {
     this.closeDefaultFavorites();
