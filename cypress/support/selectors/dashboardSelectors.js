@@ -2,9 +2,8 @@
 
 export const DASHBOARD = {
   projectCards: "project-card cmacs-card .ant-card-body",
+  projectListHeader: "project-bar",
   workspaceSelector: ".workspace-main-nav.project-workspace > div",
-  defaultFavoritesTag: "project-bar span.project-status-tag cmacs-tag",
-  defaultFavoritesCloseIcon: "div > span > i",
   searchIcon:
     "body > app-root > div > div > app-main-layout > div.ng-star-inserted > div > app-nav-layout > div > div.ant-row.secondary-menu-area > div > div > a.nav-search-icon.ng-star-inserted > span > i",
   searchInput:
