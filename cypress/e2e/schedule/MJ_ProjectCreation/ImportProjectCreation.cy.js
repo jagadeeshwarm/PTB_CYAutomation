@@ -26,14 +26,10 @@ describe("Import Project Creation - Advanced Settings", () => {
     dashboardPage.waitForPageLoad();
   });
 
-  it("Step 2: Click New and select Import Project", () => {
+  it("Step 2: Click New and import project file", () => {
     projectCreationPage.clickNewButton();
-    projectCreationPage.clickImportProject();
-  });
-
-  it("Step 3: Upload import file", () => {
-    projectCreationPage.uploadImportFile(
-      "cypress/fixtures/Project Info Sheet Template Myhome 99 (1).xlsx"
+    projectCreationPage.importProjectFile(
+      "Project Info Sheet Template Myhome 99 (1).xlsx"
     );
   });
 

@@ -43,13 +43,11 @@ class ProjectCreationPage {
     cy.wait(1500);
   }
 
-  clickImportProject() {
-    cy.contains("button", "Import Project").click();
-    cy.wait(1500);
-  }
-
-  uploadImportFile(filePath) {
-    cy.get("input[type='file']").selectFile(filePath, { force: true });
+  importProjectFile(fixtureFileName) {
+    cy.get("cmacs-modal input[type='file']").selectFile(
+      `cypress/fixtures/${fixtureFileName}`,
+      { force: true }
+    );
     cy.wait(3000);
   }
 
