@@ -44,7 +44,7 @@ class ProjectCreationPage {
   }
 
   clickImportProject() {
-    cy.get(PROJECT_CREATION.importProjectButton).click();
+    cy.contains("button", "Import Project").click();
     cy.wait(1500);
   }
 
