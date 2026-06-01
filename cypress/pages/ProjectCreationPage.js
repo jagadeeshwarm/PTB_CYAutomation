@@ -126,22 +126,13 @@ class ProjectCreationPage {
 
   // --- Location ---
 
-  searchLocation(locationText) {
-    cy.get(PROJECT_CREATION.locationSearchInput).clear().type(locationText);
-    cy.wait(3000);
-  }
-
-  selectLocationFromDropdown() {
-    cy.get(PROJECT_CREATION.locationDropdownList)
-      .find(".pac-item")
-      .first()
-      .click();
-    cy.wait(2000);
-  }
-
-  setLocation(searchText) {
-    this.searchLocation(searchText);
-    this.selectLocationFromDropdown();
+  fillLocationFields(line1, city, state, zip, country) {
+    cy.get(PROJECT_CREATION.locationLine1).clear().type(line1);
+    cy.get(PROJECT_CREATION.locationCityTown).clear().type(city);
+    cy.get(PROJECT_CREATION.locationState).clear().type(state);
+    cy.get(PROJECT_CREATION.locationZipCode).clear().type(zip);
+    cy.get(PROJECT_CREATION.locationCountry).clear().type(country);
+    cy.wait(1000);
   }
 
   // --- Sales ---

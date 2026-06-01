@@ -44,6 +44,16 @@ export const PROJECT_CREATION = {
   locationSearchInput:
     "app-address form div:nth-child(1) app-address-search input",
   locationDropdownList: "body > div:nth-child(14)",
+  locationLine1:
+    "app-address form > div:nth-child(2) > div:nth-child(1) input",
+  locationCityTown:
+    "app-address form > div:nth-child(3) > div:nth-child(1) input",
+  locationState:
+    "app-address form > div:nth-child(4) > div:nth-child(1) input",
+  locationZipCode:
+    "app-address form > div:nth-child(4) > div:nth-child(2) input",
+  locationCountry:
+    "app-address form > div:nth-child(5) > div input",
 
   // Sales
   bidTotal: "sales-panel div > div:nth-child(2) cmacs-input-number input",

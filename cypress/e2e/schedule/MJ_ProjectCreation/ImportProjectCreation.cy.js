@@ -4,7 +4,13 @@ import projectCreationPage from "../../../pages/ProjectCreationPage";
 
 const COMPANY_NAME = "Schuco India";
 const IMPORT_FILE = "Project Info Sheet Template Myhome 99 (1).xlsx";
-const LOCATION_SEARCH = "alt.f coworking space";
+const LOCATION = {
+  line1: "alt.f coworking | Coworking Space In Financial District Hyderabad",
+  city: "Nanakramguda",
+  state: "Telangana",
+  zip: "500032",
+  country: "India",
+};
 const PROJECT_NUMBER = `IMP-${Date.now()}`;
 
 describe("Import Project Creation - Advanced Settings", () => {
@@ -54,8 +60,14 @@ describe("Import Project Creation - Advanced Settings", () => {
     projectCreationPage.clickNext();
   });
 
-  it("Step 8: Search and select location", () => {
-    projectCreationPage.setLocation(LOCATION_SEARCH);
+  it("Step 8: Fill location fields", () => {
+    projectCreationPage.fillLocationFields(
+      LOCATION.line1,
+      LOCATION.city,
+      LOCATION.state,
+      LOCATION.zip,
+      LOCATION.country
+    );
   });
 
   it("Step 9: Click Next to go to Sales screen", () => {
