@@ -133,8 +133,7 @@ class ProjectCreationPage {
 
   selectLocationFromDropdown() {
     cy.get(PROJECT_CREATION.locationDropdownList)
-      .find("div, span")
-      .filter(":visible")
+      .find(".pac-item")
       .first()
       .click();
     cy.wait(2000);
