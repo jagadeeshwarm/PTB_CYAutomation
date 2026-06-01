@@ -6,5 +6,9 @@
   "nonPmUser": {
     "email": "usermj@yopmail.com",
     "password": "Password1234!"
+  },
+  "importUser": {
+    "email": "onlinesupport@plantobuild.online",
+    "password": "PToB_2023!"
   }
 }

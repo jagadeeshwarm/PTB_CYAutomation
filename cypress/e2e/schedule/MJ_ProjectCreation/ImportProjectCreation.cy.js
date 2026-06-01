@@ -12,7 +12,7 @@ describe("Import Project Creation - Advanced Settings", () => {
     cy.fixture("users").then((users) => {
       this.users = users;
       loginPage.visit();
-      loginPage.login(users.testUser.email, users.testUser.password);
+      loginPage.login(users.importUser.email, users.importUser.password);
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
     });
@@ -21,7 +21,7 @@ describe("Import Project Creation - Advanced Settings", () => {
   it("Step 1: Switch company to Schuco India", function () {
     projectCreationPage.switchCompany(
       COMPANY_NAME,
-      this.users.testUser.password
+      this.users.importUser.password
     );
     dashboardPage.waitForPageLoad();
   });
