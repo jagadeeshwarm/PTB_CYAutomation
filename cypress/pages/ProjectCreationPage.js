@@ -44,10 +44,23 @@ class ProjectCreationPage {
   }
 
   importProjectFile(fixtureFileName) {
-    cy.get(PROJECT_CREATION.importProjectFileInput).selectFile(
-      `cypress/fixtures/${fixtureFileName}`,
-      { force: true }
-    );
+    cy.get(PROJECT_CREATION.importProjectButton).then(($btn) => {
+      const $fileInput = $btn.siblings("input[type='file']").length
+        ? $btn.siblings("input[type='file']")
+        : $btn.closest("div").find("input[type='file']");
+
+      if ($fileInput.length) {
+        cy.wrap($fileInput.first()).selectFile(
+          `cypress/fixtures/${fixtureFileName}`,
+          { force: true }
+        );
+      } else {
+        cy.get(PROJECT_CREATION.importProjectFileInput).selectFile(
+          `cypress/fixtures/${fixtureFileName}`,
+          { force: true }
+        );
+      }
+    });
     cy.wait(5000);
   }
 

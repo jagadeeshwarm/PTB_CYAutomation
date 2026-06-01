@@ -13,8 +13,11 @@ export const PROJECT_CREATION = {
   switchChangeButton:
     "cmacs-modal .trans-model-footer button.ant-btn-primary",
 
-  // Import Project — file input lives inside the right-panel information-panel
-  importProjectFileInput: "information-panel input[type='file']",
+  // Import Project button and its file input
+  importProjectButton:
+    "information-panel div.ant-row.advanced-button > button.ant-btn-default",
+  importProjectFileInput:
+    "information-panel div.ant-row.advanced-button input[type='file']",
 
   // Project Type cards
   projectTypeNewBuilding:
