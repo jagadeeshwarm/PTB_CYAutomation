@@ -15,7 +15,7 @@ export const PROJECT_CREATION = {
 
   // Import Project button and its file input
   importProjectButton:
-    "information-panel div.ant-row.advanced-button > button.ant-btn-default",
+    "information-panel > .ant-row > .ant-btn.ng-star-inserted",
   importProjectFileInput:
     "information-panel div.ant-row.advanced-button input[type='file']",
 
