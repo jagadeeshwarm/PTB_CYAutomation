@@ -44,11 +44,11 @@ class ProjectCreationPage {
   }
 
   importProjectFile(fixtureFileName) {
-    cy.get("cmacs-modal input[type='file']").first().selectFile(
+    cy.get("information-panel input[type='file']").selectFile(
       `cypress/fixtures/${fixtureFileName}`,
       { force: true }
     );
-    cy.wait(3000);
+    cy.wait(5000);
   }
 
   // --- Project Type selection ---
