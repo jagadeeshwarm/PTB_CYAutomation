@@ -44,7 +44,7 @@ class ProjectCreationPage {
   }
 
   importProjectFile(fixtureFileName) {
-    cy.get("cmacs-modal input[type='file']").selectFile(
+    cy.get("cmacs-modal input[type='file']").first().selectFile(
       `cypress/fixtures/${fixtureFileName}`,
       { force: true }
     );
