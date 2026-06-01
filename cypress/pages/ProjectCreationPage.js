@@ -1,7 +1,7 @@
 import { PROJECT_CREATION, COMMON } from "../support/selectors";
 
 class ProjectCreationPage {
-  // --- User menu & company switching ---
+  // --- Company switching ---
 
   clickUserIcon() {
     cy.get(PROJECT_CREATION.userIcon).click();
@@ -25,7 +25,7 @@ class ProjectCreationPage {
 
   clickChangeButton() {
     cy.get(PROJECT_CREATION.switchChangeButton).click();
-    cy.wait(3000);
+    cy.wait(5000);
   }
 
   switchCompany(companyName, password) {
@@ -40,18 +40,18 @@ class ProjectCreationPage {
 
   clickNewButton() {
     cy.contains("button", /new/i).click();
-    cy.wait(1500);
+    cy.wait(2000);
   }
 
   importProjectFile(fixtureFileName) {
-    cy.get("information-panel input[type='file']").selectFile(
+    cy.get(PROJECT_CREATION.importProjectFileInput).selectFile(
       `cypress/fixtures/${fixtureFileName}`,
       { force: true }
     );
     cy.wait(5000);
   }
 
-  // --- Project Type selection ---
+  // --- Project Type ---
 
   selectProjectType(type) {
     const typeMap = {
@@ -60,8 +60,7 @@ class ProjectCreationPage {
       Alteration: PROJECT_CREATION.projectTypeAlteration,
       Extension: PROJECT_CREATION.projectTypeExtension,
     };
-    const selector = typeMap[type] || typeMap["New Building"];
-    cy.get(selector).click();
+    cy.get(typeMap[type] || typeMap["New Building"]).click();
     cy.wait(500);
   }
 
@@ -74,7 +73,7 @@ class ProjectCreationPage {
 
   clickCreate() {
     cy.get(PROJECT_CREATION.createButton).click();
-    cy.wait(3000);
+    cy.wait(5000);
   }
 
   clickPrevious() {
@@ -125,7 +124,7 @@ class ProjectCreationPage {
   }
 
   selectLocationFromDropdown(locationLabel) {
-    cy.get(`${COMMON.overlayContainer}`)
+    cy.get(COMMON.overlayContainer)
       .find("li:visible, div:visible")
       .contains(locationLabel)
       .click();
@@ -204,16 +203,6 @@ class ProjectCreationPage {
       .contains(/select all/i)
       .click();
     cy.wait(1000);
-  }
-
-  // --- Essentials verification ---
-
-  verifyEssentialsVisible() {
-    cy.get(PROJECT_CREATION.essentialsTab).should("be.visible");
-  }
-
-  verifyProjectDetails() {
-    cy.get(PROJECT_CREATION.essentialsProjectDetails).should("be.visible");
   }
 }
 
