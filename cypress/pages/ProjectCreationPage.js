@@ -128,20 +128,21 @@ class ProjectCreationPage {
 
   searchLocation(locationText) {
     cy.get(PROJECT_CREATION.locationSearchInput).clear().type(locationText);
-    cy.wait(2000);
+    cy.wait(3000);
   }
 
-  selectLocationFromDropdown(locationLabel) {
-    cy.get(COMMON.overlayContainer)
-      .find("li:visible, div:visible")
-      .contains(locationLabel)
+  selectLocationFromDropdown() {
+    cy.get(PROJECT_CREATION.locationDropdownList)
+      .find("div, span")
+      .filter(":visible")
+      .first()
       .click();
     cy.wait(2000);
   }
 
-  setLocation(searchText, selectionLabel) {
+  setLocation(searchText) {
     this.searchLocation(searchText);
-    this.selectLocationFromDropdown(selectionLabel);
+    this.selectLocationFromDropdown();
   }
 
   // --- Sales ---
