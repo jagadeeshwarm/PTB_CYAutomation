@@ -43,24 +43,19 @@ class ProjectCreationPage {
     cy.wait(2000);
   }
 
-  importProjectFile(fixtureFileName) {
-    cy.get(PROJECT_CREATION.importProjectButton).then(($btn) => {
-      const $fileInput = $btn.siblings("input[type='file']").length
-        ? $btn.siblings("input[type='file']")
-        : $btn.closest("div").find("input[type='file']");
+  clickImportProject() {
+    cy.get(PROJECT_CREATION.importProjectButton).click();
+    cy.wait(1000);
+  }
 
-      if ($fileInput.length) {
-        cy.wrap($fileInput.first()).selectFile(
-          `cypress/fixtures/${fixtureFileName}`,
-          { force: true }
-        );
-      } else {
-        cy.get(PROJECT_CREATION.importProjectFileInput).selectFile(
-          `cypress/fixtures/${fixtureFileName}`,
-          { force: true }
-        );
-      }
-    });
+  importProjectFile(fixtureFileName) {
+    // The Import Project button triggers a native file dialog.
+    // Cypress cannot interact with native dialogs, so we attach the file
+    // directly to the hidden file input that the button controls.
+    cy.get("cmacs-modal input[type='file']").last().selectFile(
+      `cypress/fixtures/${fixtureFileName}`,
+      { force: true }
+    );
     cy.wait(5000);
   }
 

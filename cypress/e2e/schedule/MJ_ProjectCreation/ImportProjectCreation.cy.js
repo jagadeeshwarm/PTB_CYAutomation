@@ -28,8 +28,9 @@ describe("Import Project Creation - Advanced Settings", () => {
     dashboardPage.waitForPageLoad();
   });
 
-  it("Step 2: Click New and import project file", () => {
+  it("Step 2: Click New and then click Import Project", () => {
     projectCreationPage.clickNewButton();
+    projectCreationPage.clickImportProject();
     projectCreationPage.importProjectFile(IMPORT_FILE);
   });
 
