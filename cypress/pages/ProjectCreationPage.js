@@ -166,7 +166,10 @@ class ProjectCreationPage {
   selectFirstFolderStructureTemplate() {
     cy.get(PROJECT_CREATION.folderStructureTemplate).click();
     cy.wait(500);
-    cy.get(`${COMMON.overlayContainer} ul:visible li`).first().click();
+    cy.get(`${COMMON.overlayContainer} ul:visible li`)
+      .not(":has(input)")
+      .first()
+      .click();
     cy.wait(1000);
   }
 
@@ -184,7 +187,10 @@ class ProjectCreationPage {
   selectFirstScheduleTemplate() {
     cy.get(PROJECT_CREATION.scheduleTemplate).click();
     cy.wait(500);
-    cy.get(`${COMMON.overlayContainer} ul:visible li`).first().click();
+    cy.get(`${COMMON.overlayContainer} ul:visible li`)
+      .not(":has(input)")
+      .first()
+      .click();
     cy.wait(1000);
   }
 
