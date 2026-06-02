@@ -3,9 +3,13 @@ import dashboardPage from "../../../pages/DashboardPage";
 import projectCreationPage from "../../../pages/ProjectCreationPage";
 
 const COMPANY_NAME = "Schuco India";
-const LOCATION_SEARCH = "alt.f coworking space";
-const LOCATION_SELECTION =
-  "alt.f coworking | Coworking Space In Financial District Hyderabad";
+const LOCATION = {
+  line1: "alt.f coworking | Coworking Space In Financial District Hyderabad",
+  city: "Nanakramguda",
+  state: "Telangana",
+  zip: "500032",
+  country: "India",
+};
 const PROJECT_NAME = `Manual Project ${Date.now()}`;
 const PROJECT_NUMBER = `MAN-${Date.now()}`;
 
@@ -56,22 +60,17 @@ describe("Manual Project Creation - Advanced Settings", () => {
     projectCreationPage.clickNext();
   });
 
-  it("Step 8: Search and select location from dropdown", () => {
-    projectCreationPage.searchAndSelectLocation(
-      LOCATION_SEARCH,
-      LOCATION_SELECTION
+  it("Step 8: Fill location fields", () => {
+    projectCreationPage.fillLocationFields(
+      LOCATION.line1,
+      LOCATION.city,
+      LOCATION.state,
+      LOCATION.zip,
+      LOCATION.country
     );
   });
 
-  it("Step 9: Verify location fields are auto-filled", () => {
-    cy.get("app-address form div:nth-child(2) input").should("not.have.value", "");
-    cy.get("app-address form div:nth-child(3) input").should("not.have.value", "");
-    cy.get("app-address form div:nth-child(4) div:nth-child(1) input").should("not.have.value", "");
-    cy.get("app-address form div:nth-child(4) div:nth-child(2) input").should("not.have.value", "");
-    cy.get("app-address form div:nth-child(5) input").should("not.have.value", "");
-  });
-
-  it("Step 10: Click Next to go to Sales screen", () => {
+  it("Step 9: Click Next to go to Sales screen", () => {
     projectCreationPage.clickNext();
   });
 
