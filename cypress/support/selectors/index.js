@@ -9,3 +9,9 @@ export { SIDEPANEL, SIDEPANEL_TREE_COLUMNS } from "./sidePanelSelectors";
 export { SMART_FILTER } from "./smartFilterSelectors";
 export { PLANNED_VS_ACTUAL } from "./plannedVsActualSelectors";
 export { PROJECT_CREATION } from "./projectCreationSelectors";
+export {
+  RESOURCE_ASSIGN,
+  TIMESHEET,
+  RESOURCE_LOAD,
+  RESOURCE_USAGE,
+} from "./resourceTimesheetSelectors";
