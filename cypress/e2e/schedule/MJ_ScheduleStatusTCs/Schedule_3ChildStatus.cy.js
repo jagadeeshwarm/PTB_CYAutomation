@@ -9,8 +9,9 @@ import {
   prevWorkday,
   diffCalendarDays,
 } from "../../../support/utils/dateUtils";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = `Automation_3_child_status_${dateOffset(0)}`;
+const SCHEDULE_NAME = SCHEDULE_NAMES.STATUS_3CHILD;
 
 const STATUS = {
   OVERDUE: "OVERDUE",

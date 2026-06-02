@@ -4,8 +4,9 @@ import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import sidePanelPage from "../../../pages/schedule/SidePanelPage";
 import { COMMON } from "../../../support/selectors";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_cashflow";
+const SCHEDULE_NAME = SCHEDULE_NAMES.CASHFLOW;
 
 describe("Schedule - Cash Flow Verification", () => {
   before(function () {

@@ -3,8 +3,9 @@ import dashboardPage from "../../../pages/DashboardPage";
 import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import sidePanelPage from "../../../pages/schedule/SidePanelPage";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_predecessor_sp";
+const SCHEDULE_NAME = SCHEDULE_NAMES.PREDECESSOR;
 
 describe("Schedule - Predecessor Side Panel", () => {
   before(function () {

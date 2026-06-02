@@ -3,8 +3,9 @@ import dashboardPage from "../../../pages/DashboardPage";
 import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import { dateOffset } from "../../../support/utils/dateUtils";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_status_check";
+const SCHEDULE_NAME = SCHEDULE_NAMES.STATUS;
 
 const STATUS = {
   BLANK: "BLANK",

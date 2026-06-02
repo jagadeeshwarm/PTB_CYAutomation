@@ -2,8 +2,9 @@ import loginPage from "../../../pages/LoginPage";
 import dashboardPage from "../../../pages/DashboardPage";
 import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_create_delete";
+const SCHEDULE_NAME = SCHEDULE_NAMES.TASK_CREATION;
 const TASK_1 = "New Task - 1";
 const TASK_2 = "New Task - 2";
 const RENAMED_TASK = "Facade";

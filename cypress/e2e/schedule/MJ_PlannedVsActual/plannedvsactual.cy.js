@@ -4,7 +4,9 @@ import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import plannedVsActualPage from "../../../pages/schedule/PlannedVsActualPage";
 
-const SCHEDULE_NAME = "Automation_PlannedVsActual";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
+
+const SCHEDULE_NAME = SCHEDULE_NAMES.PLANNED_ACTUAL;
 const PARENT_TASK_1 = "New Task";
 const PARENT_TASK_2 = "New Task - 2";
 const SNAPSHOT_NAME = "Automation_Snapshot_1";

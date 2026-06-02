@@ -11,8 +11,9 @@ import {
   dateTimeFromDate,
   inputDateToTreeDate,
 } from "../../../support/utils/dateUtils";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_side_panel";
+const SCHEDULE_NAME = SCHEDULE_NAMES.SIDE_PANEL;
 const RENAMED_TASK = "Test Rename";
 const CONSTRAINT_TYPE_OPTIONS = [
   "As Soon As Possible",

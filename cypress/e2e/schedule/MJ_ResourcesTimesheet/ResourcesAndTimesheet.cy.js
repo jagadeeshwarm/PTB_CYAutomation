@@ -5,8 +5,9 @@ import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import sidePanelPage from "../../../pages/schedule/SidePanelPage";
 import resourceAssignPage from "../../../pages/schedule/ResourceAssignPage";
 import timesheetPage from "../../../pages/schedule/TimesheetPage";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_Resources_Timesheet";
+const SCHEDULE_NAME = SCHEDULE_NAMES.RESOURCES;
 const TASK_COUNT = 5;
 const ASSIGNED_TASK = "New Task - 1";
 const RESOURCE_NAME = "User MJ";

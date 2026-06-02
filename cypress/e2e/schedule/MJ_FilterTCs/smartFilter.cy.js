@@ -4,8 +4,9 @@ import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import smartFilterPage from "../../../pages/schedule/SmartFilterPage";
 import { dateOffset } from "../../../support/utils/dateUtils";
+import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
-const SCHEDULE_NAME = "Automation_smart_filters";
+const SCHEDULE_NAME = SCHEDULE_NAMES.SMART_FILTER;
 const TASK_COUNT = 10;
 const WIP_STATUS = "WIP";
 const HOLD_STATUS = "Hold";

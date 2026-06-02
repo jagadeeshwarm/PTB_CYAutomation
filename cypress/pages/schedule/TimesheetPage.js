@@ -1,4 +1,5 @@
 import { TIMESHEET, RESOURCE_USAGE } from "../../support/selectors";
+import sidePanelPage from "./SidePanelPage";
 
 class TimesheetPage {
   openTimesheetTab() {
@@ -19,11 +20,12 @@ class TimesheetPage {
     cy.wait(300);
 
     cy.get(TIMESHEET.confirmButton).click();
-    cy.wait(1000);
+    cy.wait(5000);
   }
 
-  // Click the Resource icon in the top toolbar and select "Resource Usage".
+  // Close side panel first (it overlays the toolbar), then open Resource Usage.
   openResourceUsage() {
+    sidePanelPage.close();
     cy.get(RESOURCE_USAGE.resourceIcon).closest("button").click();
     cy.wait(500);
     cy.contains(RESOURCE_USAGE.menuItems, "Resource Usage").click();
