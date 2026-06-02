@@ -19,6 +19,10 @@ export const PROJECT_CREATION = {
   importProjectFileInput:
     "information-panel div.ant-row.advanced-button input[type='file']",
 
+  // Advanced button (manual project creation)
+  advancedButton:
+    "information-panel div.ant-row.advanced-button > .ant-btn.ng-star-inserted",
+
   // Project Type cards
   projectTypeNewBuilding:
     "general-information-panel div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > cmacs-card",
