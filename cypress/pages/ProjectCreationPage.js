@@ -48,6 +48,11 @@ class ProjectCreationPage {
     cy.wait(1000);
   }
 
+  clickAdvanced() {
+    cy.get(PROJECT_CREATION.advancedButton).click();
+    cy.wait(2000);
+  }
+
   importProjectFile(fixtureFileName) {
     // The Import Project button triggers a native file dialog.
     // Cypress cannot interact with native dialogs, so we attach the file
@@ -125,6 +130,13 @@ class ProjectCreationPage {
   }
 
   // --- Location ---
+
+  searchAndSelectLocation(searchText, selectionText) {
+    cy.get(PROJECT_CREATION.locationSearchInput).clear().type(searchText);
+    cy.wait(2000);
+    cy.get(".pac-container .pac-item:visible").contains(selectionText).click();
+    cy.wait(2000);
+  }
 
   fillLocationFields(line1, city, state, zip, country) {
     cy.get(PROJECT_CREATION.locationLine1).clear().type(line1);
