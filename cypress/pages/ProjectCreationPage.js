@@ -50,7 +50,7 @@ class ProjectCreationPage {
 
   clickAdvanced() {
     cy.get(PROJECT_CREATION.advancedButton).click();
-    cy.wait(2000);
+    cy.wait(5000);
   }
 
   importProjectFile(fixtureFileName) {
@@ -73,7 +73,9 @@ class ProjectCreationPage {
       Alteration: PROJECT_CREATION.projectTypeAlteration,
       Extension: PROJECT_CREATION.projectTypeExtension,
     };
-    cy.get(typeMap[type] || typeMap["New Building"]).click();
+    cy.get(typeMap[type] || typeMap["New Building"], { timeout: 15000 })
+      .should("be.visible")
+      .click();
     cy.wait(500);
   }
 

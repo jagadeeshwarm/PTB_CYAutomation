@@ -21,7 +21,7 @@ export const PROJECT_CREATION = {
 
   // Advanced button (manual project creation)
   advancedButton:
-    "information-panel div.ant-row.advanced-button > .ant-btn.ng-star-inserted",
+    "information-panel > .ant-row > :nth-child(3)",
 
   // Project Type cards
   projectTypeNewBuilding:
