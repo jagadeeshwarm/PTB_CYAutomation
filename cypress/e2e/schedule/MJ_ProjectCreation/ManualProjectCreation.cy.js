@@ -6,6 +6,7 @@ const COMPANY_NAME = "Schuco India";
 const LOCATION_SEARCH = "alt.f coworking space";
 const LOCATION_SELECTION =
   "alt.f coworking | Coworking Space In Financial District Hyderabad";
+const PROJECT_NAME = `Manual Project ${Date.now()}`;
 const PROJECT_NUMBER = `MAN-${Date.now()}`;
 
 describe("Manual Project Creation - Advanced Settings", () => {
@@ -37,7 +38,8 @@ describe("Manual Project Creation - Advanced Settings", () => {
     projectCreationPage.clickNext();
   });
 
-  it("Step 4: Clear Project Number and enter a unique one", () => {
+  it("Step 4: Enter unique Project Name and Project Number", () => {
+    projectCreationPage.clearAndTypeProjectName(PROJECT_NAME);
     projectCreationPage.clearAndTypeProjectNumber(PROJECT_NUMBER);
   });
 

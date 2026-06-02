@@ -36,6 +36,8 @@ export const PROJECT_CREATION = {
     "general-information-panel div:nth-child(2) > div:nth-child(2) > input",
 
   // Basic Information (advanced mode after import)
+  projectName:
+    "basic-info-panel form > div > div:nth-child(1) cmacs-open-input > input",
   projectNumber: "basic-info-panel form > div > div:nth-child(6) input",
   statusDropdown:
     "basic-info-panel form > div > div:nth-child(5) cmacs-select > div > div",

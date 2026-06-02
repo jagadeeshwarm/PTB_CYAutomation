@@ -103,6 +103,11 @@ class ProjectCreationPage {
 
   // --- Basic Information ---
 
+  clearAndTypeProjectName(projectName) {
+    cy.get(PROJECT_CREATION.projectName).clear().type(projectName);
+    cy.wait(500);
+  }
+
   clearAndTypeProjectNumber(projectNumber) {
     cy.get(PROJECT_CREATION.projectNumber).clear().type(projectNumber);
     cy.wait(500);
