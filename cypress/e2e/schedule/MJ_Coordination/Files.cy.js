@@ -155,36 +155,11 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 16: Get shareable link and verify in new tab", () => {
+  it("Step 16: Get shareable link, open it, enter password, verify file opens", () => {
     coordinationFilesPage.clickGetShareableLinkTab();
-    coordinationFilesPage
-      .getShareableLink()
-      .then((link) => {
-        // Open the shared link in a new window
-        cy.window().then((win) => {
-          const newWin = win.open(link, "_blank");
-          cy.wrap(newWin).should("exist");
-        });
-        cy.wait(5000);
-
-        // Switch to the new window and enter password
-        cy.window().then((win) => {
-          // Verify the shared page loaded
-          cy.origin(link, { args: { password: SHARE_PASSWORD } }, ({ password }) => {
-            cy.get("input[type='password']").type(password);
-            cy.get("button[type='submit']").click();
-            cy.wait(3000);
-
-            // Verify file is visible and not editable
-            cy.get("body").should("be.visible");
-          });
-        });
-      });
-  });
-
-  it("Step 17: Close shared tab and click Next", () => {
-    // Come back to the original share modal
-    coordinationFilesPage.clickShareNext();
+    coordinationFilesPage.getShareableLink().then((link) => {
+      coordinationFilesPage.openSharedLinkAndVerify(link, SHARE_PASSWORD);
+    });
   });
 
   it("Step 18: Verify Share Review - password and expiration date", () => {
@@ -226,24 +201,9 @@ describe("Coordination - Files", () => {
 
   it("Step 24: Get shareable link for Folders & Files and verify", () => {
     coordinationFilesPage.clickGetShareableLinkTab();
-    coordinationFilesPage
-      .getShareableLink()
-      .then((link) => {
-        cy.window().then((win) => {
-          const newWin = win.open(link, "_blank");
-          cy.wrap(newWin).should("exist");
-        });
-        cy.wait(5000);
-
-        cy.window().then((win) => {
-          cy.origin(link, { args: { password: SHARE_PASSWORD } }, ({ password }) => {
-            cy.get("input[type='password']").type(password);
-            cy.get("button[type='submit']").click();
-            cy.wait(3000);
-            cy.get("body").should("be.visible");
-          });
-        });
-      });
+    coordinationFilesPage.getShareableLink().then((link) => {
+      coordinationFilesPage.openSharedLinkAndVerify(link, SHARE_PASSWORD);
+    });
   });
 
   it("Step 25: Verify Share Review for Folders & Files", () => {

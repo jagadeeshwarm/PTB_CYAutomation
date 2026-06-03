@@ -90,6 +90,14 @@ export const COORDINATION_FILES = {
   shareViaPTBButton:
     "cmacs-modal div.creation-footer button:nth-child(3)",
 
+  // ── Shared link page ──────────────────────────────────────────────────────
+  sharedPasswordInput:
+    "app-shared-redirect form cmacs-input-group input",
+  sharedAccessButton:
+    "app-shared-redirect form > div:nth-child(2) > button",
+  sharedFilesGrid:
+    "#CUSTOMFILESGRID nz-table nz-spin div div nz-table-inner-scroll div.ant-table-body",
+
   // ── Navigation ───────────────────────────────────────────────────────────
   rootFolderSidebar: "app-documents-root div.left-panel span:first-child",
 
