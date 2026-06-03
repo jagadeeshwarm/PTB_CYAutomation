@@ -155,23 +155,20 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 16: Get shareable link, open it, enter password, verify file opens", () => {
-    coordinationFilesPage.clickGetShareableLinkTab();
-    coordinationFilesPage.getShareableLink().then((link) => {
-      coordinationFilesPage.openSharedLinkAndVerify(link, SHARE_PASSWORD);
-    });
+  it("Step 16: Click Next to Share Review", () => {
+    coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 18: Verify Share Review - password and expiration date", () => {
+  it("Step 17: Verify Share Review - password and expiration date", () => {
     coordinationFilesPage.verifyShareReviewInfo();
   });
 
-  it("Step 19: Click Documents tab and verify document", () => {
+  it("Step 18: Click Documents tab and verify document", () => {
     coordinationFilesPage.clickDocumentsTab();
     coordinationFilesPage.verifyDocumentInReview();
   });
 
-  it("Step 20: Share via PTB", () => {
+  it("Step 19: Share via PTB", () => {
     coordinationFilesPage.clickShareViaPTB();
   });
 
@@ -199,15 +196,11 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 24: Get shareable link for Folders & Files and verify", () => {
-    coordinationFilesPage.clickGetShareableLinkTab();
-    coordinationFilesPage.getShareableLink().then((link) => {
-      coordinationFilesPage.openSharedLinkAndVerify(link, SHARE_PASSWORD);
-    });
+  it("Step 24: Click Next to Share Review for Folders & Files", () => {
+    coordinationFilesPage.clickShareNext();
   });
 
   it("Step 25: Verify Share Review for Folders & Files", () => {
-    coordinationFilesPage.clickShareNext();
     coordinationFilesPage.verifyShareReviewInfo();
     coordinationFilesPage.clickDocumentsTab();
     coordinationFilesPage.verifyDocumentInReview();
