@@ -90,6 +90,9 @@ export const COORDINATION_FILES = {
   shareViaPTBButton:
     "cmacs-modal div.creation-footer button:nth-child(3)",
 
+  // ── Navigation ───────────────────────────────────────────────────────────
+  rootFolderSidebar: "app-documents-root div.left-panel span:first-child",
+
   // ── Rename modal ─────────────────────────────────────────────────────────
   renameInput: "cmacs-modal input",
   renameOkButton:
