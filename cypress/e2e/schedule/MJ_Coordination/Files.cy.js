@@ -64,8 +64,7 @@ describe("Coordination - Files", () => {
   });
 
   it("Step 4: Close the file tab and go back to files list", () => {
-    cy.go("back");
-    cy.wait(5000);
+    coordinationFilesPage.navigateToRootFolder();
   });
 
   // ── Upload Folder ───────────────────────────────────────────────────────
@@ -81,8 +80,7 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFolderExists("SubFolder2");
     coordinationFilesPage.verifyFileExists("FolderFile1");
     // Navigate back to root
-    cy.go("back");
-    cy.wait(3000);
+    coordinationFilesPage.navigateToRootFolder();
   });
 
   // ── Import Template ─────────────────────────────────────────────────────
@@ -130,8 +128,7 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFileExists("TestFile2");
     coordinationFilesPage.verifyFileExists("TestFile3");
     // Navigate back to root
-    cy.go("back");
-    cy.wait(3000);
+    coordinationFilesPage.navigateToRootFolder();
   });
 
   // ── Share - Only Files ──────────────────────────────────────────────────

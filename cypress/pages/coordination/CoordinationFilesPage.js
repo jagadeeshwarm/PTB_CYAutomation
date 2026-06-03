@@ -408,6 +408,13 @@ class CoordinationFilesPage {
     this.confirmRename();
   }
 
+  // ── Navigation ─────────────────────────────────────────────────────────
+
+  navigateToRootFolder() {
+    cy.contains("Root Folder").first().click();
+    cy.wait(3000);
+  }
+
   // ── Utility ───────────────────────────────────────────────────────────
 
   reloadPage() {
