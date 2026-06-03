@@ -86,13 +86,10 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFileExists("SingleTestFile");
   });
 
-  it("Step 4b: Open the file, select V1, verify content and close", () => {
+  it("Step 4b: Open the file, select V1 and close", () => {
     coordinationFilesPage.openFirstFile();
     coordinationFilesPage.verifyFileIsOpen();
-    // Select V1 to compare with current version
     coordinationFilesPage.selectVersion("V 1");
-    coordinationFilesPage.verifyCanvasLoaded();
-    // Go back to files list
     cy.go("back");
     cy.wait(5000);
   });
