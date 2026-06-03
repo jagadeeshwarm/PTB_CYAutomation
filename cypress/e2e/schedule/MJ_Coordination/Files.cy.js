@@ -45,9 +45,9 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFileExists("TestFile3");
   });
 
-  it("Step 3: Open an uploaded file and verify it opens", () => {
+  it("Step 3: Open an uploaded file and verify it opens with correct content", () => {
     coordinationFilesPage.openFirstFile();
-    coordinationFilesPage.verifyFileIsOpen();
+    coordinationFilesPage.verifyFileIsOpen("Single upload test");
   });
 
   it("Step 4: Close the file tab and go back to files list", () => {
