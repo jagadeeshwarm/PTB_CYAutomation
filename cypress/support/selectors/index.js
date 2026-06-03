@@ -15,3 +15,4 @@ export {
   RESOURCE_LOAD,
   RESOURCE_USAGE,
 } from "./resourceTimesheetSelectors";
+export { COORDINATION_FILES } from "./coordinationFilesSelectors";
