@@ -98,6 +98,13 @@ export const COORDINATION_FILES = {
   sharedFilesGrid:
     "#CUSTOMFILESGRID nz-table nz-spin div div nz-table-inner-scroll div.ant-table-body",
 
+  // ── File viewer / Version ──────────────────────────────────────────────────
+  versionDropdown:
+    "app-document-viewer-topbar div.versioncompare cmacs-select > div > div",
+  versionList: ".cdk-overlay-container div:visible",
+  viewerCanvas:
+    "#app-viewer-container-page-container-paper-1 > div > canvas.upper-canvas",
+
   // ── Navigation ───────────────────────────────────────────────────────────
   rootFolderSidebar: "app-documents-root div.left-panel span:first-child",
 

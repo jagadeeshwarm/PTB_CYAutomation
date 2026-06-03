@@ -198,6 +198,35 @@ class CoordinationFilesPage {
     cy.wait(5000);
   }
 
+  // ── Version ────────────────────────────────────────────────────────────
+
+  clickVersionDropdown() {
+    cy.get(COORDINATION_FILES.versionDropdown).click();
+    cy.wait(1000);
+  }
+
+  selectVersion(versionText) {
+    this.clickVersionDropdown();
+    cy.get(COORDINATION_FILES.versionList)
+      .contains(versionText)
+      .click();
+    cy.wait(5000);
+  }
+
+  verifyVersionExists(versionText) {
+    this.clickVersionDropdown();
+    cy.get(COORDINATION_FILES.versionList)
+      .should("contain.text", versionText);
+    // Close dropdown by clicking again
+    cy.get(COORDINATION_FILES.versionDropdown).click();
+    cy.wait(500);
+  }
+
+  verifyCanvasLoaded() {
+    cy.get(COORDINATION_FILES.viewerCanvas, { timeout: 15000 })
+      .should("be.visible");
+  }
+
   // ── Import Template ───────────────────────────────────────────────────
 
   importTemplate() {
