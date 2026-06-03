@@ -160,13 +160,6 @@ class CoordinationFilesPage {
   }
 
   selectFirstFile() {
-    // Dismiss any stray modal that might be covering the file
-    cy.get("body").then(($body) => {
-      if ($body.find(".ant-modal-wrap:visible").length > 0) {
-        cy.get(".ant-modal-wrap:visible .ant-btn-default").first().click({ force: true });
-        cy.wait(1000);
-      }
-    });
     cy.get(COORDINATION_FILES.fileCard).first().click();
     cy.wait(500);
   }
