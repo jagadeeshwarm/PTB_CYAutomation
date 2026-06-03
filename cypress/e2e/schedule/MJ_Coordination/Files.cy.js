@@ -155,9 +155,8 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 16: Click shareable link radio and go to Share Review", () => {
-    cy.get(".ant-radio-wrapper-checked > .ant-radio").click();
-    cy.wait(500);
+  it("Step 16: Click Get Shareable Link tab then Next to Review", () => {
+    coordinationFilesPage.clickGetShareableLinkTab();
     coordinationFilesPage.clickShareNext();
   });
 
@@ -198,9 +197,8 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 24: Click shareable link radio and go to Share Review for Folders & Files", () => {
-    cy.get(".ant-radio-wrapper-checked > .ant-radio").click();
-    cy.wait(500);
+  it("Step 24: Click Get Shareable Link tab then Next to Review for Folders & Files", () => {
+    coordinationFilesPage.clickGetShareableLinkTab();
     coordinationFilesPage.clickShareNext();
   });
 
