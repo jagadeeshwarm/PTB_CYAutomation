@@ -64,7 +64,7 @@ export const COORDINATION_FILES = {
 
   // Share settings
   shareTitle:
-    "app-document-share-settings > :nth-child(1) > :nth-child(1) > :nth-child(2) > .ant-col > .ant-input",
+    "app-document-share-settings > :nth-child(1) > :nth-child(1) > :nth-child(2) > .ant-col > input.ant-input",
   sharePassword:
     "cmacs-modal app-document-share-settings div.model-margin > div:nth-child(1) > input",
   shareExpirationDate:

@@ -311,7 +311,7 @@ class CoordinationFilesPage {
     // Expand all folders first, then click the last checkbox (a file).
     this.expandAllDocumentFolders();
     cy.get("cmacs-modal app-document-tree cmacs-tree .ant-tree-checkbox > span")
-      .first()
+      .last()
       .click();
     cy.wait(500);
   }
@@ -327,7 +327,9 @@ class CoordinationFilesPage {
   }
 
   enterShareTitle(title) {
-    cy.get(COORDINATION_FILES.shareTitle).click().clear().type(title);
+    cy.get(COORDINATION_FILES.shareTitle).click();
+    cy.wait(300);
+    cy.get(COORDINATION_FILES.shareTitle).clear().type(title);
     cy.wait(500);
   }
 
