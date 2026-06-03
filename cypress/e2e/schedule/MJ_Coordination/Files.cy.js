@@ -155,7 +155,8 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 16: Click Next to Share Review", () => {
+  it("Step 16: Skip shareable link and go to Share Review", () => {
+    // Click Next to skip the shareable link page
     coordinationFilesPage.clickShareNext();
   });
 
@@ -196,7 +197,8 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 24: Click Next to Share Review for Folders & Files", () => {
+  it("Step 24: Skip shareable link and go to Share Review for Folders & Files", () => {
+    // Click Next to skip the shareable link page
     coordinationFilesPage.clickShareNext();
   });
 
