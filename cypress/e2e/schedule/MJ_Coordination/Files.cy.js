@@ -68,6 +68,40 @@ describe("Coordination - Files", () => {
     cy.wait(5000);
   });
 
+  // ── Modify and re-upload file to create V2 ──────────────────────────────
+
+  it("Step 4a: Modify SingleTestFile.txt and re-upload it", () => {
+    // Overwrite the fixture file with new content
+    cy.writeFile(
+      "cypress/fixtures/upload-test-files/SingleTestFile.txt",
+      "Modified upload test - version 2"
+    );
+    coordinationFilesPage.uploadSingleFile(SINGLE_FILE);
+    coordinationFilesPage.verifyFileExists("SingleTestFile");
+  });
+
+  it("Step 4b: Open the re-uploaded file and verify version dropdown", () => {
+    coordinationFilesPage.openFirstFile();
+    coordinationFilesPage.verifyFileIsOpen();
+    // Verify both V1 and V2 exist in the version dropdown
+    coordinationFilesPage.verifyVersionExists("V 2");
+  });
+
+  it("Step 4c: Select V2 and verify canvas loaded", () => {
+    coordinationFilesPage.selectVersion("V 2");
+    coordinationFilesPage.verifyCanvasLoaded();
+  });
+
+  it("Step 4d: Select V1 and verify canvas loaded", () => {
+    coordinationFilesPage.selectVersion("V 1");
+    coordinationFilesPage.verifyCanvasLoaded();
+  });
+
+  it("Step 4e: Go back to files list", () => {
+    cy.go("back");
+    cy.wait(5000);
+  });
+
   // ── Upload Folder ───────────────────────────────────────────────────────
 
   it("Step 5: Upload a folder with multiple folders and files", () => {
