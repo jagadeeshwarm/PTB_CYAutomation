@@ -9,9 +9,18 @@ const MULTIPLE_FILES = [
   "upload-test-files/TestFile3.txt",
 ];
 const UPLOAD_FOLDER_FILES = [
-  "cypress/fixtures/upload-test-folder/FolderFile1.txt",
-  "cypress/fixtures/upload-test-folder/SubFolder1/SubFile1.txt",
-  "cypress/fixtures/upload-test-folder/SubFolder2/SubFile2.txt",
+  {
+    contents: "cypress/fixtures/upload-test-folder/FolderFile1.txt",
+    fileName: "upload-test-folder/FolderFile1.txt",
+  },
+  {
+    contents: "cypress/fixtures/upload-test-folder/SubFolder1/SubFile1.txt",
+    fileName: "upload-test-folder/SubFolder1/SubFile1.txt",
+  },
+  {
+    contents: "cypress/fixtures/upload-test-folder/SubFolder2/SubFile2.txt",
+    fileName: "upload-test-folder/SubFolder2/SubFile2.txt",
+  },
 ];
 const NEW_FOLDER_NAME = `NewFolder-${Date.now()}`;
 const SHARE_TITLE = `Share-${Date.now()}`;
