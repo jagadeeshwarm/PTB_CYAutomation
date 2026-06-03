@@ -47,34 +47,42 @@ class CoordinationFilesPage {
 
   uploadFolder(folderFiles) {
     // Cypress selectFile does not set webkitRelativePath, so the app
-    // cannot reconstruct the folder hierarchy. We use JavaScript to
-    // create File objects with webkitRelativePath and dispatch them
+    // cannot reconstruct the folder hierarchy. We read each file,
+    // build File objects with webkitRelativePath, and dispatch them
     // to the hidden file input so the app sees a real folder upload.
     cy.on("window:confirm", () => true);
     this.clickUpload();
     this.clickUploadFolder();
 
-    // Read each fixture file as a binary blob, then build a DataTransfer
-    // with webkitRelativePath set on every File.
-    const filePromises = folderFiles.map((f) =>
-      cy.readFile(f.contents, "binary").then((binary) => ({
-        binary,
-        relativePath: f.fileName,
-        name: f.fileName.split("/").pop(),
-      }))
+    // Read all files sequentially and collect their data
+    const filesData = [];
+    const readChain = folderFiles.reduce(
+      (chain, f) =>
+        chain.then(() =>
+          cy.readFile(f.contents, "binary").then((binary) => {
+            filesData.push({
+              binary,
+              relativePath: f.fileName,
+              name: f.fileName.split("/").pop(),
+            });
+          })
+        ),
+      cy.wrap(null)
     );
 
-    cy.wrap(Promise.all(filePromises)).then((files) => {
+    readChain.then(() => {
       cy.get("input[type='file']")
         .last()
         .then(($input) => {
           const dataTransfer = new DataTransfer();
-          files.forEach((f) => {
-            const blob = Cypress.Blob.binaryStringToBlob(f.binary);
-            const file = new File([blob], f.name, {
+          filesData.forEach((f) => {
+            const uint8 = new Uint8Array(f.binary.length);
+            for (let i = 0; i < f.binary.length; i++) {
+              uint8[i] = f.binary.charCodeAt(i);
+            }
+            const file = new File([uint8], f.name, {
               type: "application/octet-stream",
             });
-            // webkitRelativePath is read-only, so override it
             Object.defineProperty(file, "webkitRelativePath", {
               value: f.relativePath,
               writable: false,
