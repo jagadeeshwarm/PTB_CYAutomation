@@ -367,10 +367,37 @@ class CoordinationFilesPage {
   getShareableLink() {
     return cy
       .get(COORDINATION_FILES.shareableLink)
-      .invoke("attr", "href")
-      .then((href) => {
-        return href;
-      });
+      .invoke("attr", "href");
+  }
+
+  openSharedLinkAndVerify(link, password) {
+    // Save the current URL so we can come back
+    cy.url().then((originalUrl) => {
+      // Visit the shared link
+      cy.visit(link);
+      cy.wait(5000);
+
+      // Enter password and click Access
+      cy.get(COORDINATION_FILES.sharedPasswordInput).type(password);
+      cy.wait(300);
+      cy.get(COORDINATION_FILES.sharedAccessButton).click();
+      cy.wait(5000);
+
+      // Shared files list appears — double-click first file to open
+      cy.get(COORDINATION_FILES.sharedFilesGrid)
+        .find("tr")
+        .first()
+        .dblclick();
+      cy.wait(5000);
+
+      // File opened — now go back to the shared files list
+      cy.go("back");
+      cy.wait(3000);
+
+      // Go back to the original coordination page
+      cy.visit(originalUrl);
+      cy.wait(5000);
+    });
   }
 
   clickShareViaPTB() {
