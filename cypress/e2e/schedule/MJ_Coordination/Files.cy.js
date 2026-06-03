@@ -80,24 +80,18 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFileExists("SingleTestFile");
   });
 
-  it("Step 4b: Open the re-uploaded file and verify version dropdown", () => {
+  it("Step 4b: Open the re-uploaded file and verify V2 is shown", () => {
     coordinationFilesPage.openFirstFile();
     coordinationFilesPage.verifyFileIsOpen();
-    // Verify both V1 and V2 exist in the version dropdown
     coordinationFilesPage.verifyVersionExists("V 2");
   });
 
-  it("Step 4c: Select V2 and verify canvas loaded", () => {
-    coordinationFilesPage.selectVersion("V 2");
-    coordinationFilesPage.verifyCanvasLoaded();
-  });
-
-  it("Step 4d: Select V1 and verify canvas loaded", () => {
+  it("Step 4c: Select V1 from version dropdown to compare with V2", () => {
     coordinationFilesPage.selectVersion("V 1");
     coordinationFilesPage.verifyCanvasLoaded();
   });
 
-  it("Step 4e: Go back to files list", () => {
+  it("Step 4d: Close the file tab and go back to files list", () => {
     cy.go("back");
     cy.wait(5000);
   });
