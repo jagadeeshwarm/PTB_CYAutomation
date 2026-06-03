@@ -403,7 +403,9 @@ class CoordinationFilesPage {
   }
 
   clickShareViaPTB() {
-    cy.get(COORDINATION_FILES.shareViaPTBButton).click();
+    cy.get("cmacs-modal div.creation-footer")
+      .contains("button", /share/i)
+      .click();
     cy.wait(3000);
   }
 
