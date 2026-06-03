@@ -147,12 +147,15 @@ class CoordinationFilesPage {
 
   // ── File open verification ──────────────────────────────────────────
 
-  verifyFileIsOpen() {
-    // After double-click the file viewer page loads with the document.
-    // Verify the page loaded by checking the URL or a visible element.
-    cy.url().should("include", "/coordination/");
-    cy.get("body").should("be.visible");
+  verifyFileIsOpen(expectedContent) {
+    // Wait for the "Loading document..." spinner to disappear
+    cy.get("nz-spin", { timeout: 30000 }).should("not.have.class", "ant-spin-spinning");
     cy.wait(3000);
+    // Verify the file viewer has loaded the document content
+    cy.url().should("include", "/coordination/");
+    if (expectedContent) {
+      cy.get("body").should("contain.text", expectedContent);
+    }
   }
 
   // ── Import Template ───────────────────────────────────────────────────
