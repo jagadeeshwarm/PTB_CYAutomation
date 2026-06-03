@@ -24,8 +24,8 @@ describe("Coordination - Files", () => {
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
       dashboardPage.openProjectBySearch("Automation Project");
-      // Navigate to Coordination > Files workspace
-      dashboardPage.selectWorkspaceByIndex(3);
+      // Click on Workspaces and then click on Coordination
+      dashboardPage.selectWorkspaceByName("Coordination");
     });
   });
 

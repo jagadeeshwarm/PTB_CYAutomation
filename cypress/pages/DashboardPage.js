@@ -59,6 +59,15 @@ class DashboardPage {
       .click();
     cy.wait(2000);
   }
+
+  selectWorkspaceByName(workspaceName) {
+    this.workspaceSelector.click();
+    cy.wait(500);
+    cy.get(`${COMMON.overlayContainer} ul:visible li`)
+      .contains(workspaceName)
+      .click();
+    cy.wait(2000);
+  }
 }
 
 export default new DashboardPage();
