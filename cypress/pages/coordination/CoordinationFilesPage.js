@@ -160,6 +160,13 @@ class CoordinationFilesPage {
   }
 
   selectFirstFile() {
+    // Dismiss any stray modal that might be covering the file
+    cy.get("body").then(($body) => {
+      if ($body.find(".ant-modal-wrap:visible").length > 0) {
+        cy.get(".ant-modal-wrap:visible .ant-btn-default").first().click({ force: true });
+        cy.wait(1000);
+      }
+    });
     cy.get(COORDINATION_FILES.fileCard).first().click();
     cy.wait(500);
   }
@@ -367,14 +374,16 @@ class CoordinationFilesPage {
   getShareableLink() {
     return cy
       .get(COORDINATION_FILES.shareableLink)
-      .invoke("attr", "href");
+      .invoke("text")
+      .then((text) => text.trim());
   }
 
   openSharedLinkAndVerify(link, password) {
     // Save the current URL so we can come back
     cy.url().then((originalUrl) => {
-      // Visit the shared link
-      cy.visit(link);
+      // Visit the shared link — use the full URL
+      const fullLink = link.startsWith("http") ? link : `https://${link}`;
+      cy.visit(fullLink);
       cy.wait(5000);
 
       // Enter password and click Access
@@ -430,10 +439,8 @@ class CoordinationFilesPage {
   }
 
   confirmDelete() {
-    // Click the primary confirm button in the delete confirmation modal
-    cy.get("cmacs-modal .trans-model-footer button.ant-btn-primary")
-      .last()
-      .click();
+    // Click the red Delete button in the confirmation popup
+    cy.get(".ant-btn-danger").click();
     cy.wait(3000);
   }
 
