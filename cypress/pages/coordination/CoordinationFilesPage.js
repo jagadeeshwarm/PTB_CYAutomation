@@ -473,6 +473,38 @@ class CoordinationFilesPage {
     this.confirmDelete();
   }
 
+  deleteAllFiles() {
+    cy.get(COORDINATION_FILES.filesList).then(($list) => {
+      const deleteNext = () => {
+        cy.get(COORDINATION_FILES.filesList).then(($el) => {
+          if ($el.find("cmacs-card").length > 0) {
+            cy.get(COORDINATION_FILES.fileCard).first().click();
+            cy.wait(500);
+            this.deleteSelectedItem();
+            deleteNext();
+          }
+        });
+      };
+      deleteNext();
+    });
+  }
+
+  deleteAllFolders() {
+    cy.get(COORDINATION_FILES.foldersList).then(($list) => {
+      const deleteNext = () => {
+        cy.get(COORDINATION_FILES.foldersList).then(($el) => {
+          if ($el.find("cmacs-card").length > 0) {
+            cy.get(COORDINATION_FILES.folderCard).first().click();
+            cy.wait(500);
+            this.deleteSelectedItem();
+            deleteNext();
+          }
+        });
+      };
+      deleteNext();
+    });
+  }
+
   // ── Rename ────────────────────────────────────────────────────────────
 
   clickRename() {

@@ -239,57 +239,35 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareViaPTB();
   });
 
-  // ── Delete File ─────────────────────────────────────────────────────────
+  // ── Rename Folder ───────────────────────────────────────────────────────
 
   it("Step 25b: Dismiss any leftover modal", () => {
     coordinationFilesPage.dismissModalIfPresent();
   });
 
-  it("Step 26: Select a file and delete it", () => {
-    coordinationFilesPage.selectFirstFile();
-    coordinationFilesPage.deleteSelectedItem();
-  });
-
-  it("Step 27: Verify file is deleted", () => {
-    // After deletion the file count should have decreased
-    cy.wait(2000);
-    coordinationFilesPage.reloadPage();
-  });
-
-  // ── Delete Folder ───────────────────────────────────────────────────────
-
-  it("Step 28: Select the created folder and delete it", () => {
-    coordinationFilesPage.selectFolderByName(NEW_FOLDER_NAME);
-    coordinationFilesPage.deleteSelectedItem();
-  });
-
-  it("Step 29: Verify folder is deleted", () => {
-    coordinationFilesPage.reloadPage();
-    cy.get("app-document-view-icons > div > div:nth-child(2)").should(
-      "not.contain.text",
-      NEW_FOLDER_NAME
-    );
-  });
-
-  // ── Rename Folder ───────────────────────────────────────────────────────
-
-  it("Step 30: Select the uploaded folder and rename it", () => {
+  it("Step 26: Select the uploaded folder and rename it", () => {
     coordinationFilesPage.selectFolderByName("upload-test-folder");
     coordinationFilesPage.renameSelectedItem(RENAME_FOLDER);
-  });
-
-  it("Step 31: Verify folder is renamed", () => {
     coordinationFilesPage.verifyFolderExists(RENAME_FOLDER);
   });
 
   // ── Rename File ─────────────────────────────────────────────────────────
 
-  it("Step 32: Select an uploaded file and rename it", () => {
+  it("Step 27: Select an uploaded file and rename it", () => {
     coordinationFilesPage.selectFirstFile();
     coordinationFilesPage.renameSelectedItem(RENAME_FILE);
+    coordinationFilesPage.verifyFileExists(RENAME_FILE);
   });
 
-  it("Step 33: Verify file is renamed", () => {
-    coordinationFilesPage.verifyFileExists(RENAME_FILE);
+  // ── Delete All Files ──────────────────────────────────────────────────
+
+  it("Step 28: Delete all files one by one", () => {
+    coordinationFilesPage.deleteAllFiles();
+  });
+
+  // ── Delete All Folders ────────────────────────────────────────────────
+
+  it("Step 29: Delete all folders one by one", () => {
+    coordinationFilesPage.deleteAllFolders();
   });
 });
