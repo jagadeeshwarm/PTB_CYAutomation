@@ -140,9 +140,7 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.clickShareNext();
   });
 
-  it("Step 14: Expand document tree and select a file", () => {
-    coordinationFilesPage.expandDocumentTree();
-    cy.wait(1000);
+  it("Step 14: Expand all folders and select the last file", () => {
     coordinationFilesPage.selectDocumentFileCheckbox();
     coordinationFilesPage.clickShareNext();
   });
@@ -211,8 +209,6 @@ describe("Coordination - Files", () => {
   });
 
   it("Step 22: Expand document tree and select a folder", () => {
-    coordinationFilesPage.expandDocumentTree();
-    cy.wait(1000);
     coordinationFilesPage.selectDocumentFolderCheckbox();
     coordinationFilesPage.clickShareNext();
   });

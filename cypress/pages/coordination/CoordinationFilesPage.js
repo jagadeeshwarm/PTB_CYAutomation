@@ -289,30 +289,38 @@ class CoordinationFilesPage {
     cy.wait(2000);
   }
 
-  expandDocumentTree() {
-    cy.get(COORDINATION_FILES.documentTreeExpand).first().click();
-    cy.wait(1000);
+  expandAllDocumentFolders() {
+    // Expand all closed folders in the document tree.
+    // Keep clicking closed switchers until none remain.
+    const expandNext = () => {
+      cy.get("cmacs-modal app-document-tree cmacs-tree").then(($tree) => {
+        const $closed = $tree.find(
+          "span.ant-tree-switcher_close:not(.ant-tree-switcher_is_leaf)"
+        );
+        if ($closed.length > 0) {
+          cy.wrap($closed.first()).click();
+          cy.wait(1000);
+          expandNext();
+        }
+      });
+    };
+    expandNext();
   }
 
   selectDocumentFileCheckbox() {
-    // Select a file checkbox (not a folder).
-    // Files are leaf nodes — they have ant-tree-switcher_is_leaf (no expand arrow).
-    cy.get("cmacs-modal app-document-tree cmacs-tree cmacs-tree-node li div")
-      .filter(":has(span.ant-tree-switcher_is_leaf)")
-      .first()
-      .find("span.ant-tree-checkbox > span")
-      .first()
+    // Expand all folders first, then click the last checkbox (a file).
+    this.expandAllDocumentFolders();
+    cy.get("cmacs-modal app-document-tree cmacs-tree .ant-tree-checkbox > span")
+      .last()
       .click();
     cy.wait(500);
   }
 
   selectDocumentFolderCheckbox() {
-    // Select a folder checkbox (not a file).
-    // Folders have a switcher (expand arrow), not ant-tree-switcher_is_leaf.
-    cy.get("cmacs-modal app-document-tree cmacs-tree cmacs-tree-node li div")
-      .filter(":has(span.ant-tree-switcher:not(.ant-tree-switcher_is_leaf))")
-      .first()
-      .find("span.ant-tree-checkbox > span")
+    // Expand the root, then click the first folder's checkbox.
+    cy.get(COORDINATION_FILES.documentTreeExpand).first().click();
+    cy.wait(1000);
+    cy.get("cmacs-modal app-document-tree cmacs-tree .ant-tree-checkbox > span")
       .first()
       .click();
     cy.wait(500);
