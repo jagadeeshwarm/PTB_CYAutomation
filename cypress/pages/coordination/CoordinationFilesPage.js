@@ -327,7 +327,7 @@ class CoordinationFilesPage {
   }
 
   enterShareTitle(title) {
-    cy.get(COORDINATION_FILES.shareTitle).clear().type(title);
+    cy.get(COORDINATION_FILES.shareTitle).click().clear().type(title);
     cy.wait(500);
   }
 
