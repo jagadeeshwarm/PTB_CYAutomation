@@ -205,12 +205,13 @@ class CoordinationFilesPage {
     this.clickUploadTemplate();
   }
 
-  selectFirstTemplate() {
+  selectTemplateBySearch(templateName) {
     cy.get(COORDINATION_FILES.folderStructureTemplateDropdown).click();
     cy.wait(500);
+    cy.get(".cmacs-select-search").clear().type(templateName);
+    cy.wait(1000);
     cy.get(`${COMMON.overlayContainer} ul:visible li`)
-      .not(":has(input)")
-      .first()
+      .contains(templateName)
       .click();
     cy.wait(1000);
   }

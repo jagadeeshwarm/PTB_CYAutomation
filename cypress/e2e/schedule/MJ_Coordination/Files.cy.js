@@ -88,7 +88,7 @@ describe("Coordination - Files", () => {
 
   it("Step 7: Import a folder structure template", () => {
     coordinationFilesPage.importTemplate();
-    coordinationFilesPage.selectFirstTemplate();
+    coordinationFilesPage.selectTemplateBySearch("Test_MJ2");
     coordinationFilesPage.expandTemplateFolder();
     coordinationFilesPage.selectAllTemplateFolders();
     coordinationFilesPage.clickImport();
