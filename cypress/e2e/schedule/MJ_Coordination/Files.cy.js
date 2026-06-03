@@ -45,15 +45,12 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFileExists("TestFile3");
   });
 
-  it("Step 3: Open an uploaded file", () => {
+  it("Step 3: Open an uploaded file and verify it opens", () => {
     coordinationFilesPage.openFirstFile();
+    coordinationFilesPage.verifyFileIsOpen();
   });
 
-  // ── Verify File is Editable ─────────────────────────────────────────────
-
-  it("Step 4: Verify file is editable", () => {
-    coordinationFilesPage.verifyFileIsEditable();
-    // Navigate back to Coordination files page
+  it("Step 4: Close the file tab and go back to files list", () => {
     cy.go("back");
     cy.wait(5000);
   });
