@@ -50,12 +50,16 @@ class CoordinationFilesPage {
     // Pass an array of { contents, fileName } objects where fileName
     // includes the relative folder path (webkitRelativePath) so the app
     // reconstructs the folder structure.
+    // Auto-accept the browser's "Upload files to this site?" confirmation.
+    cy.on("window:confirm", () => true);
     this.clickUpload();
     this.clickUploadFolder();
     cy.get("input[type='file']").last().selectFile(folderFiles, {
       force: true,
     });
-    cy.wait(5000);
+    cy.wait(10000);
+    // Reload to see the uploaded files/folders
+    this.reloadPage();
   }
 
   // ── Verify uploads ────────────────────────────────────────────────────
