@@ -53,9 +53,9 @@ describe("Coordination - Files", () => {
 
   it("Step 4: Verify file is editable", () => {
     coordinationFilesPage.verifyFileIsEditable();
-    // Navigate back to files list
+    // Navigate back to Coordination files page
     cy.go("back");
-    cy.wait(3000);
+    cy.wait(5000);
   });
 
   // ── Upload Folder ───────────────────────────────────────────────────────

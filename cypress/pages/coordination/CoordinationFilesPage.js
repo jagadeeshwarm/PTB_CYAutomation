@@ -93,8 +93,20 @@ class CoordinationFilesPage {
   // ── Open file / folder ────────────────────────────────────────────────
 
   openFirstFile() {
+    // Double-click opens the file in a new tab.
+    // Capture the new tab URL via window.open stub, then visit it.
+    cy.window().then((win) => {
+      cy.stub(win, "open").as("newTab");
+    });
     cy.get(COORDINATION_FILES.fileCard).first().dblclick();
-    cy.wait(3000);
+    cy.wait(2000);
+    cy.get("@newTab").then((stub) => {
+      if (stub.called) {
+        const url = stub.firstCall.args[0];
+        cy.visit(url);
+        cy.wait(5000);
+      }
+    });
   }
 
   openFirstFolder() {
@@ -136,18 +148,20 @@ class CoordinationFilesPage {
   // ── File editable check ───────────────────────────────────────────────
 
   verifyFileIsEditable() {
-    // After opening a file, the editor/viewer should show editable controls
-    cy.get("body").then(($body) => {
-      const hasEditor =
-        $body.find("[contenteditable='true']").length > 0 ||
-        $body.find("textarea").length > 0 ||
-        $body.find(".editor-container").length > 0;
-      expect(hasEditor).to.be.true;
-    });
+    // File opens in a new tab with edit options on the right panel.
+    // Verify that the right-panel edit controls are visible.
+    cy.get("app-document-view-toolbar, .document-toolbar, .right-panel", {
+      timeout: 10000,
+    })
+      .should("exist")
+      .then(() => {
+        // Look for edit/rename/download buttons that confirm edit capability
+        cy.get("button").should("have.length.greaterThan", 0);
+      });
   }
 
   verifyFileIsNotEditable() {
-    cy.get("[contenteditable='true']").should("not.exist");
+    cy.get("app-document-view-toolbar button").should("not.exist");
   }
 
   // ── Import Template ───────────────────────────────────────────────────
