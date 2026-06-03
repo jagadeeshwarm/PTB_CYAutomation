@@ -3,6 +3,9 @@ import dashboardPage from "../../../pages/DashboardPage";
 import coordinationFilesPage from "../../../pages/coordination/CoordinationFilesPage";
 
 const SINGLE_FILE = "upload-test-files/SingleTestFile.txt";
+const SINGLE_FILE_PATH = "cypress/fixtures/upload-test-files/SingleTestFile.txt";
+const ORIGINAL_CONTENT = "Single upload test";
+const MODIFIED_CONTENT = "Modified upload test - version 2";
 const MULTIPLE_FILES = [
   "upload-test-files/TestFile1.txt",
   "upload-test-files/TestFile2.txt",
@@ -30,6 +33,8 @@ const RENAME_FILE = `RenamedFile-${Date.now()}`;
 
 describe("Coordination - Files", () => {
   before(function () {
+    // Ensure fixture file starts with original content
+    cy.writeFile(SINGLE_FILE_PATH, ORIGINAL_CONTENT);
     cy.fixture("users").then((users) => {
       this.users = users;
       loginPage.visit();
@@ -40,6 +45,11 @@ describe("Coordination - Files", () => {
       // Click on Workspaces and then click on Coordination
       dashboardPage.selectWorkspaceByName("Coordination");
     });
+  });
+
+  after(() => {
+    // Reset fixture file back to original content after test run
+    cy.writeFile(SINGLE_FILE_PATH, ORIGINAL_CONTENT);
   });
 
   // ── Upload Single File ──────────────────────────────────────────────────
@@ -71,11 +81,7 @@ describe("Coordination - Files", () => {
   // ── Modify and re-upload file to create V2 ──────────────────────────────
 
   it("Step 4a: Modify SingleTestFile.txt and re-upload it", () => {
-    // Overwrite the fixture file with new content
-    cy.writeFile(
-      "cypress/fixtures/upload-test-files/SingleTestFile.txt",
-      "Modified upload test - version 2"
-    );
+    cy.writeFile(SINGLE_FILE_PATH, MODIFIED_CONTENT);
     coordinationFilesPage.uploadSingleFile(SINGLE_FILE);
     coordinationFilesPage.verifyFileExists("SingleTestFile");
   });
