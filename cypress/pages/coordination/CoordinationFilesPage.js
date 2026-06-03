@@ -317,11 +317,11 @@ class CoordinationFilesPage {
   }
 
   selectDocumentFolderCheckbox() {
-    // Expand the root, then click the first folder's checkbox.
-    cy.get(COORDINATION_FILES.documentTreeExpand).first().click();
-    cy.wait(1000);
+    // Expand all folders, scroll to the bottom, then click the last checkbox.
+    this.expandAllDocumentFolders();
     cy.get("cmacs-modal app-document-tree cmacs-tree .ant-tree-checkbox > span")
-      .first()
+      .last()
+      .scrollIntoView()
       .click();
     cy.wait(500);
   }
