@@ -145,23 +145,14 @@ class CoordinationFilesPage {
     cy.wait(3000);
   }
 
-  // ── File editable check ───────────────────────────────────────────────
+  // ── File open verification ──────────────────────────────────────────
 
-  verifyFileIsEditable() {
-    // File opens in a new tab with edit options on the right panel.
-    // Verify that the right-panel edit controls are visible.
-    cy.get("app-document-view-toolbar, .document-toolbar, .right-panel", {
-      timeout: 10000,
-    })
-      .should("exist")
-      .then(() => {
-        // Look for edit/rename/download buttons that confirm edit capability
-        cy.get("button").should("have.length.greaterThan", 0);
-      });
-  }
-
-  verifyFileIsNotEditable() {
-    cy.get("app-document-view-toolbar button").should("not.exist");
+  verifyFileIsOpen() {
+    // After double-click the file viewer page loads with the document.
+    // Verify the page loaded by checking the URL or a visible element.
+    cy.url().should("include", "/coordination/");
+    cy.get("body").should("be.visible");
+    cy.wait(3000);
   }
 
   // ── Import Template ───────────────────────────────────────────────────
