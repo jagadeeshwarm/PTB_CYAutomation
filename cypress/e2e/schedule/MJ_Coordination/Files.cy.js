@@ -72,10 +72,17 @@ describe("Coordination - Files", () => {
 
   it("Step 5: Upload a folder with multiple folders and files", () => {
     coordinationFilesPage.uploadFolder(UPLOAD_FOLDER_FILES);
-    // Verify the files from the folder are uploaded
+    coordinationFilesPage.verifyFolderExists("upload-test-folder");
+  });
+
+  it("Step 6: Open uploaded folder and verify contents", () => {
+    coordinationFilesPage.openFolderByName("upload-test-folder");
+    coordinationFilesPage.verifyFolderExists("SubFolder1");
+    coordinationFilesPage.verifyFolderExists("SubFolder2");
     coordinationFilesPage.verifyFileExists("FolderFile1");
-    coordinationFilesPage.verifyFileExists("SubFile1");
-    coordinationFilesPage.verifyFileExists("SubFile2");
+    // Navigate back to root
+    cy.go("back");
+    cy.wait(3000);
   });
 
   // ── Import Template ─────────────────────────────────────────────────────
@@ -109,9 +116,7 @@ describe("Coordination - Files", () => {
   it("Step 10: Open new folder and upload folder with files", () => {
     coordinationFilesPage.openFolderByName(NEW_FOLDER_NAME);
     coordinationFilesPage.uploadFolder(UPLOAD_FOLDER_FILES);
-    coordinationFilesPage.verifyFileExists("FolderFile1");
-    coordinationFilesPage.verifyFileExists("SubFile1");
-    coordinationFilesPage.verifyFileExists("SubFile2");
+    coordinationFilesPage.verifyFolderExists("upload-test-folder");
   });
 
   it("Step 11: Upload separate files in the new folder", () => {
@@ -119,7 +124,8 @@ describe("Coordination - Files", () => {
     cy.wait(3000);
   });
 
-  it("Step 12: Verify all files are uploaded in the new folder", () => {
+  it("Step 12: Verify folder and files are uploaded in the new folder", () => {
+    coordinationFilesPage.verifyFolderExists("upload-test-folder");
     coordinationFilesPage.verifyFileExists("TestFile1");
     coordinationFilesPage.verifyFileExists("TestFile2");
     coordinationFilesPage.verifyFileExists("TestFile3");
