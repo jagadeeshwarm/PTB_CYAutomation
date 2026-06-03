@@ -45,13 +45,14 @@ class CoordinationFilesPage {
     cy.wait(5000);
   }
 
-  uploadFolder(fixtureFolderPath) {
+  uploadFolder(fixtureFiles) {
+    // Cypress selectFile cannot upload directories directly.
+    // Pass an array of file paths (relative to project root) to upload.
     this.clickUpload();
     this.clickUploadFolder();
-    cy.get("input[type='file']").last().selectFile(
-      fixtureFolderPath,
-      { force: true }
-    );
+    cy.get("input[type='file']").last().selectFile(fixtureFiles, {
+      force: true,
+    });
     cy.wait(5000);
   }
 

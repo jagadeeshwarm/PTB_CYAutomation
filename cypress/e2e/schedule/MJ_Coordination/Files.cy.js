@@ -8,7 +8,11 @@ const MULTIPLE_FILES = [
   "upload-test-files/TestFile2.txt",
   "upload-test-files/TestFile3.txt",
 ];
-const UPLOAD_FOLDER = "cypress/fixtures/upload-test-folder";
+const UPLOAD_FOLDER_FILES = [
+  "cypress/fixtures/upload-test-folder/FolderFile1.txt",
+  "cypress/fixtures/upload-test-folder/SubFolder1/SubFile1.txt",
+  "cypress/fixtures/upload-test-folder/SubFolder2/SubFile2.txt",
+];
 const NEW_FOLDER_NAME = `NewFolder-${Date.now()}`;
 const SHARE_TITLE = `Share-${Date.now()}`;
 const SHARE_PASSWORD = "Password1234!";
@@ -58,7 +62,7 @@ describe("Coordination - Files", () => {
   // ── Upload Folder ───────────────────────────────────────────────────────
 
   it("Step 5: Upload a folder with multiple folders and files", () => {
-    coordinationFilesPage.uploadFolder(UPLOAD_FOLDER);
+    coordinationFilesPage.uploadFolder(UPLOAD_FOLDER_FILES);
     coordinationFilesPage.verifyFolderExists("upload-test-folder");
   });
 
@@ -102,7 +106,7 @@ describe("Coordination - Files", () => {
 
   it("Step 10: Open new folder and upload folder with files", () => {
     coordinationFilesPage.openFolderByName(NEW_FOLDER_NAME);
-    coordinationFilesPage.uploadFolder(UPLOAD_FOLDER);
+    coordinationFilesPage.uploadFolder(UPLOAD_FOLDER_FILES);
     cy.wait(3000);
   });
 
