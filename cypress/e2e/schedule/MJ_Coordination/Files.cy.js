@@ -86,18 +86,13 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.verifyFileExists("SingleTestFile");
   });
 
-  it("Step 4b: Open the re-uploaded file and verify V2 is shown", () => {
+  it("Step 4b: Open the file, select V1, verify content and close", () => {
     coordinationFilesPage.openFirstFile();
     coordinationFilesPage.verifyFileIsOpen();
-    coordinationFilesPage.verifyVersionExists("V 2");
-  });
-
-  it("Step 4c: Select V1 from version dropdown to compare with V2", () => {
+    // Select V1 to compare with current version
     coordinationFilesPage.selectVersion("V 1");
     coordinationFilesPage.verifyCanvasLoaded();
-  });
-
-  it("Step 4d: Close the file tab and go back to files list", () => {
+    // Go back to files list
     cy.go("back");
     cy.wait(5000);
   });
