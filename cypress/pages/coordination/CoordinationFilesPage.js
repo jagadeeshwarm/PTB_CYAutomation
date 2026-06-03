@@ -467,6 +467,20 @@ class CoordinationFilesPage {
     this.confirmRename();
   }
 
+  // ── Modal helpers ──────────────────────────────────────────────────────
+
+  dismissModalIfPresent() {
+    cy.get("body").then(($body) => {
+      const $cancel = $body.find(
+        "cmacs-modal .trans-model-footer button.ant-btn-background-ghost"
+      );
+      if ($cancel.length > 0) {
+        cy.wrap($cancel.first()).click({ force: true });
+        cy.wait(1000);
+      }
+    });
+  }
+
   // ── Navigation ─────────────────────────────────────────────────────────
 
   navigateToRootFolder() {

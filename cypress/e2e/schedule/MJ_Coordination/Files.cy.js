@@ -175,6 +175,10 @@ describe("Coordination - Files", () => {
 
   // ── Share - Folders & Files ─────────────────────────────────────────────
 
+  it("Step 20: Dismiss any leftover modal", () => {
+    coordinationFilesPage.dismissModalIfPresent();
+  });
+
   it("Step 21: Click Share again and select Folders & Files", () => {
     coordinationFilesPage.clickShare();
     coordinationFilesPage.selectFoldersAndFiles();
@@ -210,6 +214,10 @@ describe("Coordination - Files", () => {
   });
 
   // ── Delete File ─────────────────────────────────────────────────────────
+
+  it("Step 25b: Dismiss any leftover modal", () => {
+    coordinationFilesPage.dismissModalIfPresent();
+  });
 
   it("Step 26: Select a file and delete it", () => {
     coordinationFilesPage.selectFirstFile();
