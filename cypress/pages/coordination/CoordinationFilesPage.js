@@ -46,19 +46,49 @@ class CoordinationFilesPage {
   }
 
   uploadFolder(folderFiles) {
-    // Cypress selectFile cannot upload directories directly.
-    // Pass an array of { contents, fileName } objects where fileName
-    // includes the relative folder path (webkitRelativePath) so the app
-    // reconstructs the folder structure.
-    // Auto-accept the browser's "Upload files to this site?" confirmation.
+    // Cypress selectFile does not set webkitRelativePath, so the app
+    // cannot reconstruct the folder hierarchy. We use JavaScript to
+    // create File objects with webkitRelativePath and dispatch them
+    // to the hidden file input so the app sees a real folder upload.
     cy.on("window:confirm", () => true);
     this.clickUpload();
     this.clickUploadFolder();
-    cy.get("input[type='file']").last().selectFile(folderFiles, {
-      force: true,
+
+    // Read each fixture file as a binary blob, then build a DataTransfer
+    // with webkitRelativePath set on every File.
+    const filePromises = folderFiles.map((f) =>
+      cy.readFile(f.contents, "binary").then((binary) => ({
+        binary,
+        relativePath: f.fileName,
+        name: f.fileName.split("/").pop(),
+      }))
+    );
+
+    cy.wrap(Promise.all(filePromises)).then((files) => {
+      cy.get("input[type='file']")
+        .last()
+        .then(($input) => {
+          const dataTransfer = new DataTransfer();
+          files.forEach((f) => {
+            const blob = Cypress.Blob.binaryStringToBlob(f.binary);
+            const file = new File([blob], f.name, {
+              type: "application/octet-stream",
+            });
+            // webkitRelativePath is read-only, so override it
+            Object.defineProperty(file, "webkitRelativePath", {
+              value: f.relativePath,
+              writable: false,
+            });
+            dataTransfer.items.add(file);
+          });
+          $input[0].files = dataTransfer.files;
+          $input[0].dispatchEvent(
+            new Event("change", { bubbles: true })
+          );
+        });
     });
+
     cy.wait(10000);
-    // Reload to see the uploaded files/folders
     this.reloadPage();
   }
 
