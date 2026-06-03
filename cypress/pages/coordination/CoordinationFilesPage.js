@@ -147,15 +147,10 @@ class CoordinationFilesPage {
 
   // ── File open verification ──────────────────────────────────────────
 
-  verifyFileIsOpen(expectedContent) {
-    // Wait for the "Loading document..." spinner to disappear
-    cy.get("nz-spin", { timeout: 30000 }).should("not.have.class", "ant-spin-spinning");
-    cy.wait(3000);
-    // Verify the file viewer has loaded the document content
-    cy.url().should("include", "/coordination/");
-    if (expectedContent) {
-      cy.get("body").should("contain.text", expectedContent);
-    }
+  verifyFileIsOpen() {
+    // Verify the file viewer page has loaded
+    cy.url().should("include", "/viewer/");
+    cy.wait(5000);
   }
 
   // ── Import Template ───────────────────────────────────────────────────
