@@ -64,7 +64,8 @@ describe("Coordination - Files", () => {
   });
 
   it("Step 4: Close the file tab and go back to files list", () => {
-    coordinationFilesPage.navigateToRootFolder();
+    cy.go("back");
+    cy.wait(5000);
   });
 
   // ── Upload Folder ───────────────────────────────────────────────────────
