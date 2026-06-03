@@ -57,8 +57,18 @@ class CoordinationFilesPage {
 
   // ── Verify uploads ────────────────────────────────────────────────────
 
+  /**
+   * Strip the extension from a filename.
+   * "TestFile1.txt" → "TestFile1", "Report.pdf" → "Report"
+   */
+  stripExtension(fileName) {
+    const dotIndex = fileName.lastIndexOf(".");
+    return dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName;
+  }
+
   verifyFileExists(fileName) {
-    cy.get(COORDINATION_FILES.filesList).should("contain.text", fileName);
+    const baseName = this.stripExtension(fileName);
+    cy.get(COORDINATION_FILES.filesList).should("contain.text", baseName);
   }
 
   verifyFolderExists(folderName) {

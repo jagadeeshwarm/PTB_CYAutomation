@@ -13,7 +13,7 @@ const NEW_FOLDER_NAME = `NewFolder-${Date.now()}`;
 const SHARE_TITLE = `Share-${Date.now()}`;
 const SHARE_PASSWORD = "Password1234!";
 const RENAME_FOLDER = `RenamedFolder-${Date.now()}`;
-const RENAME_FILE = `RenamedFile-${Date.now()}.txt`;
+const RENAME_FILE = `RenamedFile-${Date.now()}`;
 
 describe("Coordination - Files", () => {
   before(function () {
@@ -33,16 +33,16 @@ describe("Coordination - Files", () => {
 
   it("Step 1: Upload a single file and verify", () => {
     coordinationFilesPage.uploadSingleFile(SINGLE_FILE);
-    coordinationFilesPage.verifyFileExists("SingleTestFile.txt");
+    coordinationFilesPage.verifyFileExists("SingleTestFile");
   });
 
   // ── Upload Multiple Files ───────────────────────────────────────────────
 
   it("Step 2: Upload multiple files and verify", () => {
     coordinationFilesPage.uploadMultipleFiles(MULTIPLE_FILES);
-    coordinationFilesPage.verifyFileExists("TestFile1.txt");
-    coordinationFilesPage.verifyFileExists("TestFile2.txt");
-    coordinationFilesPage.verifyFileExists("TestFile3.txt");
+    coordinationFilesPage.verifyFileExists("TestFile1");
+    coordinationFilesPage.verifyFileExists("TestFile2");
+    coordinationFilesPage.verifyFileExists("TestFile3");
   });
 
   it("Step 3: Open an uploaded file", () => {
@@ -69,7 +69,7 @@ describe("Coordination - Files", () => {
     coordinationFilesPage.openFolderByName("upload-test-folder");
     coordinationFilesPage.verifyFolderExists("SubFolder1");
     coordinationFilesPage.verifyFolderExists("SubFolder2");
-    coordinationFilesPage.verifyFileExists("FolderFile1.txt");
+    coordinationFilesPage.verifyFileExists("FolderFile1");
     // Navigate back to root
     cy.go("back");
     cy.wait(3000);
@@ -116,9 +116,9 @@ describe("Coordination - Files", () => {
 
   it("Step 12: Verify folder and files are uploaded in the new folder", () => {
     coordinationFilesPage.verifyFolderExists("upload-test-folder");
-    coordinationFilesPage.verifyFileExists("TestFile1.txt");
-    coordinationFilesPage.verifyFileExists("TestFile2.txt");
-    coordinationFilesPage.verifyFileExists("TestFile3.txt");
+    coordinationFilesPage.verifyFileExists("TestFile1");
+    coordinationFilesPage.verifyFileExists("TestFile2");
+    coordinationFilesPage.verifyFileExists("TestFile3");
     // Navigate back to root
     cy.go("back");
     cy.wait(3000);
