@@ -295,11 +295,14 @@ class CoordinationFilesPage {
   }
 
   selectDocumentFileCheckbox() {
-    // Select a file checkbox (not a folder). Files have names with extensions.
-    cy.get("cmacs-modal app-document-tree cmacs-tree cmacs-tree-node")
-      .filter(":contains('.txt'), :contains('.pdf'), :contains('.xlsx'), :contains('.docx')")
+    // Select a file checkbox (not a folder).
+    // Files are leaf nodes — they don't have a switcher (expand arrow).
+    // Find a node whose title contains a file extension and click its checkbox.
+    cy.get("cmacs-modal app-document-tree cmacs-tree cmacs-tree-node li div")
+      .filter(":has(span.ant-tree-switcher_is_leaf)")
       .first()
       .find("span.ant-tree-checkbox > span")
+      .first()
       .click();
     cy.wait(500);
   }
