@@ -294,8 +294,13 @@ class CoordinationFilesPage {
     cy.wait(1000);
   }
 
-  selectDocumentCheckbox() {
-    cy.get(COORDINATION_FILES.documentTreeCheckbox).first().click();
+  selectDocumentFileCheckbox() {
+    // Select a file checkbox (not a folder). Files have names with extensions.
+    cy.get("cmacs-modal app-document-tree cmacs-tree cmacs-tree-node")
+      .filter(":contains('.txt'), :contains('.pdf'), :contains('.xlsx'), :contains('.docx')")
+      .first()
+      .find("span.ant-tree-checkbox > span")
+      .click();
     cy.wait(500);
   }
 
