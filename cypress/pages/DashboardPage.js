@@ -38,7 +38,21 @@ class DashboardPage {
   }
 
   openSearchedProject(projectName) {
-    cy.contains(DASHBOARD.searchedProjectCard, projectName)
+    // Exact match only: cy.contains() is a substring match, so "Automation
+    // Project" would otherwise open the "Automation Project 2" card. We pick the
+    // card that has a leaf element whose trimmed text equals the name exactly.
+    cy.get(DASHBOARD.searchedProjectCard)
+      .filter((_i, card) =>
+        Cypress.$(card)
+          .find("*")
+          .toArray()
+          .some(
+            (el) =>
+              el.childElementCount === 0 &&
+              el.textContent.trim() === projectName
+          )
+      )
+      .first()
       .find(DASHBOARD.searchedProjectCardBody)
       .dblclick();
     cy.wait(2000);
