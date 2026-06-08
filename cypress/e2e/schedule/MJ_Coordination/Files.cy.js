@@ -41,7 +41,7 @@ describe("Coordination - Files", () => {
       loginPage.login(users.testUser.email, users.testUser.password);
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
-      dashboardPage.openProjectBySearch("Automation Project 2");
+      dashboardPage.openProjectBySearch("Automation Project 3");
       // Click on Workspaces and then click on Coordination
       dashboardPage.selectWorkspaceByName("Coordination");
     });

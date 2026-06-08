@@ -83,7 +83,11 @@ describe("Coordination Workflows - ToDo status flow", () => {
     });
   });
 
-  it("Step 8: Set status to Completed and verify", () => {
+  it("Step 8: Enable the Completed column on the board", () => {
+    todoWorkflowPage.enableCompletedColumn();
+  });
+
+  it("Step 9: Set status to Completed and verify", () => {
     todoWorkflowPage.openCardSidePanel(TODO_TITLE);
     todoWorkflowPage.changeStatus("Completed");
     todoWorkflowPage.verifyCardInStatus(TODO_TITLE, "Completed");

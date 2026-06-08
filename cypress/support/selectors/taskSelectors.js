@@ -6,6 +6,7 @@ export const TASK = {
   sidePanelDeleteButton: "#Delete",
 
   // Gantt grid
+  ganttGridScale: ".gantt_grid_scale",
   ganttGridData: ".gantt_grid_data",
   ganttCell: ".gantt_grid_data .gantt_cell",
   ganttRows: ".gantt_grid_data .gantt_row:not(.gantt_row_empty)",
@@ -41,10 +42,9 @@ export const TASK = {
   // Save button in the Show Columns dialog
   showColumnsSaveButton: ".ant-btn-primary > .ng-star-inserted",
 
-  // Status label of the selected task row, located by data-column-index attr
-  // (more stable than nth-child since it survives layout shifts)
+  // Status label of the selected task row, kept for legacy callers.
   selectedRowStatusByDataIndex:
-    'body > app-root > div > div > app-main-layout > div:nth-child(2) > app-content-layout > app-content-layout > app-gantt-root > nz-spin > div > div > div.ant-row.gantt-container.ant-row-start > app-pss-gantt > div.gantt-height.ganttWidthWithoutSide > div > div.gantt_layout_cell.gantt_layout.gantt_layout_y.gridCell_cell.gantt_layout_cell_border_right > div.gantt_layout_cell.grid_cell.gantt_layout_cell_border_transparent.gantt_layout_outer_scroll.gantt_layout_outer_scroll_horizontal.gantt_layout_outer_scroll.gantt_layout_outer_scroll_vertical.gantt_layout_cell_border_bottom > div > div > div.gantt_grid_data > div.gantt_row.gantt_selected.gantt_row_task > div:nth-child(19) > div',
+    ".gantt_grid_data .gantt_row.gantt_selected.gantt_row_task [data-column-index='Status']",
 };
 
 // Column indices in the Gantt grid (1-based, matches :nth-child).

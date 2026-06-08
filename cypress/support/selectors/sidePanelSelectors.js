@@ -74,22 +74,31 @@ export const SIDEPANEL = {
   // --- Cash Flow tab (identified by its Cost icon class) ---
   cashFlowTabItem: ".iconUILarge-Cost",
 
-  // Cash Flow panel fields — all scoped to app-cash-flow-side-panel
-  // Exact paths confirmed from live DOM inspection
-  cashFlowForecastInput:
-    "app-cash-flow-side-panel div:nth-child(3) cmacs-form-control input",
-  // > div > div > span drills to the single value span, avoiding multi-span concatenation
-  cashFlowReferenceAmount:
-    "app-cash-flow-side-panel div:nth-child(2) cmacs-form-control > div > div > span",
-  cashFlowActualValue:
-    "app-cash-flow-side-panel div:nth-child(4) cmacs-form-control > div > div > span",
-  cashFlowAddValueButton:
-    "app-cash-flow-side-panel div.section-content.cashflow-action-buttons > button",
+  // Cash Flow panel — all scoped under app-cash-flow-side-panel nz-spin
+  cfPanel: "app-cash-flow-side-panel nz-spin > div > div",
 
-  // Add / Edit Value popup — cdk-overlay ID is dynamic; nz-modal-container is stable
+  // Balance to Receive row (bottom summary)
+  cfBalanceRow: "app-cash-flow-side-panel nz-spin > div > div > div.balance-row",
+
+  // --- Forecast section ---
+  cfForecastAddButton: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(4) > button",
+  cfForecastTotal: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(5)",
+  cfForecastList: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(6)",
+  // Edit/Delete icons within forecast list entries (used with .find() on cfForecastList)
+  cfForecastEditIcon: "div.cashflow-actions > i.iconUILarge-Edit.edit-icon",
+  cfForecastDeleteIcon: "div.cashflow-actions > i.iconUILarge-Trash.delete-icon",
+
+  // --- Actual Value section ---
+  cfActualAddButton: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(8) > button",
+  cfActualTotal: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(9)",
+  cfActualList: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(10)",
+  // Edit/Delete icons within actual list entries (used with .find() on cfActualList)
+  cfActualEditIcon: "div.cashflow-actions > i.iconUILarge-Edit.edit-icon",
+  cfActualDeleteIcon: "div.cashflow-actions > i.iconUILarge-Trash.delete-icon",
+
+  // --- Add / Edit popup (shared by Forecast and Actual) ---
   cashFlowPopupMonthInput:
     "nz-modal-container .ant-modal-body div:nth-child(1) cmacs-month-picker input",
-  // Direct child (>) ensures only the Value input is matched, not the nested month-picker input
   cashFlowPopupValueInput:
     "nz-modal-container .ant-modal-body div:nth-child(2) > input",
   cashFlowPopupNoteInput:
@@ -97,7 +106,15 @@ export const SIDEPANEL = {
   cashFlowPopupConfirmButton:
     "nz-modal-container .ant-modal-footer button.ant-btn-primary",
 
-  // Cash Flow list entries (first entry in the list)
+  // Legacy selectors kept for backward compatibility
+  cashFlowForecastInput:
+    "app-cash-flow-side-panel div:nth-child(3) cmacs-form-control input",
+  cashFlowReferenceAmount:
+    "app-cash-flow-side-panel div:nth-child(2) cmacs-form-control > div > div > span",
+  cashFlowActualValue:
+    "app-cash-flow-side-panel div:nth-child(4) cmacs-form-control > div > div > span",
+  cashFlowAddValueButton:
+    "app-cash-flow-side-panel div.section-content.cashflow-action-buttons > button",
   cashFlowListFirstEntry:
     "app-cash-flow-side-panel .cashflow-list div:nth-child(1)",
   cashFlowEditIcon:

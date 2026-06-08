@@ -3,7 +3,7 @@ import dashboardPage from "../../../pages/DashboardPage";
 import projectCreationPage from "../../../pages/ProjectCreationPage";
 
 const COMPANY_NAME = "Schuco India";
-const IMPORT_FILE = "Project Info Sheet Template Myhome 99 (1).xlsx";
+const IMPORT_FILE = "Central IKON_PIS_Latest_version.xlsx";
 const LOCATION = {
   line1: "alt.f coworking | Coworking Space In Financial District Hyderabad",
   city: "Nanakramguda",

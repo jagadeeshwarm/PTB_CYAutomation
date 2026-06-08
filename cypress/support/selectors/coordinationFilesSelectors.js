@@ -18,8 +18,7 @@ export const COORDINATION_FILES = {
   // ── Upload dropdown options ──────────────────────────────────────────────
   uploadFileOption: ".cdk-overlay-container ul:visible > li:nth-child(1)",
   uploadFolderOption: ".cdk-overlay-container ul:visible > li:nth-child(2)",
-  uploadTemplateOption:
-    ".cdk-overlay-container ul:visible > li.ant-dropdown-menu-item.ng-star-inserted",
+  uploadTemplateOptions: ".cdk-overlay-container ul:visible > li",
 
   // ── Import Template modal ────────────────────────────────────────────────
   folderStructureTemplateDropdown:
@@ -46,7 +45,7 @@ export const COORDINATION_FILES = {
   filesList:
     "app-document-view-icons > div > div:nth-child(4)",
   fileCard:
-    "app-document-view-icons > div > div:nth-child(4) > cmacs-list nz-spin div div cmacs-card > div > div.cmacs-card-big-file-meta.ng-star-inserted > div.cmacs-card-icon-wrapper.ng-star-inserted",
+    "app-document-view-icons > div > div:nth-child(4) .document-cards > .ant-card-body > .cmacs-card-big-file-meta > .cmacs-card-icon-wrapper",
 
   // ── Share modal ──────────────────────────────────────────────────────────
   shareOnlyFiles:

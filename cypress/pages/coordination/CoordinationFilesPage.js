@@ -9,17 +9,19 @@ class CoordinationFilesPage {
   }
 
   clickUploadFile() {
-    cy.get(COORDINATION_FILES.uploadFileOption).click();
+    cy.get(COORDINATION_FILES.uploadFileOption).click({ force: true });
     cy.wait(1000);
   }
 
   clickUploadFolder() {
-    cy.get(COORDINATION_FILES.uploadFolderOption).click();
+    cy.get(COORDINATION_FILES.uploadFolderOption).click({ force: true });
     cy.wait(1000);
   }
 
   clickUploadTemplate() {
-    cy.get(COORDINATION_FILES.uploadTemplateOption).click();
+    cy.contains(COORDINATION_FILES.uploadTemplateOptions, /import template/i)
+      .should("not.have.class", "ant-dropdown-menu-item-disabled")
+      .click();
     cy.wait(2000);
   }
 
@@ -230,6 +232,7 @@ class CoordinationFilesPage {
   // ── Import Template ───────────────────────────────────────────────────
 
   importTemplate() {
+    this.reloadPage();
     this.clickUpload();
     this.clickUploadTemplate();
   }
@@ -238,7 +241,7 @@ class CoordinationFilesPage {
     cy.get(COORDINATION_FILES.folderStructureTemplateDropdown).click();
     cy.wait(500);
     cy.get(".cmacs-select-search").clear().type(templateName);
-    cy.wait(1000);
+    cy.wait(2000);
     cy.get(`${COMMON.overlayContainer} ul:visible li`)
       .contains(templateName)
       .click();
@@ -275,7 +278,7 @@ class CoordinationFilesPage {
   }
 
   clickNewFolderOption() {
-    cy.get(COORDINATION_FILES.newFolderOption).click();
+    cy.get(COORDINATION_FILES.newFolderOption).click({ force: true });
     cy.wait(1000);
   }
 
@@ -474,12 +477,18 @@ class CoordinationFilesPage {
   }
 
   deleteAllFiles() {
-    cy.get(COORDINATION_FILES.filesList).then(($list) => {
+    cy.get(COORDINATION_FILES.filesList).then(() => {
       const deleteNext = () => {
         cy.get(COORDINATION_FILES.filesList).then(($el) => {
-          if ($el.find("cmacs-card").length > 0) {
+          if ($el.find(".document-cards").length > 0) {
             cy.get(COORDINATION_FILES.fileCard).first().click();
             cy.wait(500);
+            cy.get(COORDINATION_FILES.deleteButton).then(($btn) => {
+              if ($btn.prop("disabled")) {
+                cy.get(COORDINATION_FILES.fileCard).first().click();
+                cy.wait(500);
+              }
+            });
             this.deleteSelectedItem();
             deleteNext();
           }

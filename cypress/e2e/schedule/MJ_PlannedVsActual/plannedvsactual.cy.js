@@ -3,7 +3,7 @@ import dashboardPage from "../../../pages/DashboardPage";
 import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import plannedVsActualPage from "../../../pages/schedule/PlannedVsActualPage";
-import { dateOffset } from "../../../support/utils/dateUtils";
+import { dateOffset, workdayOffset } from "../../../support/utils/dateUtils";
 import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
 const SCHEDULE_NAME = SCHEDULE_NAMES.PLANNED_ACTUAL;
@@ -104,13 +104,13 @@ describe("Planned vs Actual - Complete Test", () => {
     taskCreationPage.scrollGanttRight();
   });
 
-  it("Step 4b: Task 2 (row 1) - move start date 1 day earlier → OverDue", () => {
-    taskCreationPage.setStartDateForRow(1, dateOffset(-1));
+  it("Step 4b: Task 2 (row 1) - move start date 1 working day earlier → OverDue", () => {
+    taskCreationPage.setStartDateForRow(1, workdayOffset(-1));
     taskCreationPage.verifyTaskStatus(STATUS.OVERDUE);
   });
 
-  it("Step 4c: Task 3 (row 2) - move start date 1 day earlier + set duration 2 → Delayed", () => {
-    taskCreationPage.setStartDateForRow(2, dateOffset(-1));
+  it("Step 4c: Task 3 (row 2) - move start date 1 working day earlier + set duration 2 → Delayed", () => {
+    taskCreationPage.setStartDateForRow(2, workdayOffset(-1));
     taskCreationPage.selectTaskByRow(2);
     taskCreationPage.scrollGanttLeft();
     taskCreationPage.setDuration(2);

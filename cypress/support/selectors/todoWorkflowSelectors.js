@@ -54,6 +54,12 @@ export const TODO_WORKFLOW = {
   // Column cell for a status (any user row). Use ^= because value is "Status:userId".
   statusColumn: (statusKey) => `.wx-column[data-drop-area^="${statusKey}:"]`,
 
+  // ── Board toolbar ─────────────────────────────────────────────────────────
+  moreOptionsButton:
+    "todo-bar div.page-header-rightside > div > button.ant-btn.ant-dropdown-trigger.ant-btn-default.cmacs-btn-action.ant-btn-icon-only",
+  completedColumnCheckbox:
+    ".cdk-overlay-container ul:visible li.ant-dropdown-menu-item.ng-star-inserted > label",
+
   // ── Side panel (todo-details) ─────────────────────────────────────────────
   detailsPanel: "todo-details .todo-details-panel",
   sidePanelLabel: "todo-details .sidepanel-label-input",

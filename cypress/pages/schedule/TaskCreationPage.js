@@ -248,15 +248,18 @@ class TaskCreationPage {
   }
 
   _getColIndexByHeaderText(headerText) {
-    return cy.get(".gantt_grid_head_cell").then(($headers) => {
-      const normalizedHeaderText = headerText.trim().toLowerCase();
-      const columnIndex = [...$headers].findIndex((header) =>
-        header.innerText.trim().toLowerCase().includes(normalizedHeaderText),
-      );
+    return cy
+      .get(TASK.ganttGridScale)
+      .find(".gantt_grid_head_cell")
+      .then(($headers) => {
+        const normalizedHeaderText = headerText.trim().toLowerCase();
+        const columnIndex = [...$headers].findIndex((header) =>
+          header.innerText.trim().toLowerCase().includes(normalizedHeaderText),
+        );
 
-      expect(columnIndex, `${headerText} column index`).to.be.greaterThan(-1);
-      return columnIndex + 1;
-    });
+        expect(columnIndex, `${headerText} column index`).to.be.greaterThan(-1);
+        return columnIndex + 1;
+      });
   }
 
   editSelectedTaskDate(columnIndex, dateValue) {
@@ -364,16 +367,21 @@ class TaskCreationPage {
     );
   }
 
-  // Status verification using data-column-index attr — used after closing
-  // the side panel (when columns shift to the without-side layout)
+  // Verify after closing the side panel by resolving STATUS from the header row.
   verifyTaskStatusByDataIndex(expectedStatus) {
-    cy.get(TASK.selectedRowStatusByDataIndex)
-      .invoke("text")
-      .then((text) => {
-        expect(text.trim().toUpperCase()).to.include(
-          expectedStatus.toUpperCase(),
-        );
-      });
+    cy.get(TASK.ganttGridScale)
+      .find(TASK_COLUMN_HEADERS.STATUS)
+      .should("exist");
+
+    this._getColIndex(TASK_COLUMN_HEADERS.STATUS).then((colIndex) => {
+      cy.get(`${TASK.ganttSelectedRow} > div:nth-child(${colIndex})`)
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim().toUpperCase()).to.include(
+            expectedStatus.toUpperCase(),
+          );
+        });
+    });
   }
 
   verifyTaskStatus(expectedStatus) {

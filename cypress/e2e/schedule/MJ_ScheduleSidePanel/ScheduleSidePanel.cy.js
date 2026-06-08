@@ -131,4 +131,10 @@ describe("Schedule - Side Panel Task Editing", () => {
       inputDateToTreeDate(newConstraintDate),
     );
   });
+
+  it("Step 12: Clean up - delete the schedule", () => {
+    schedulePage.goBackToScheduleList();
+    schedulePage.deleteScheduleByName(SCHEDULE_NAME);
+    schedulePage.verifyScheduleDoesNotExist(SCHEDULE_NAME);
+  });
 });

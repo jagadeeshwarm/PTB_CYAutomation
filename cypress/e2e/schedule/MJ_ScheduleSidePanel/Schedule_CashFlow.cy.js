@@ -8,9 +8,10 @@ import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
 const SCHEDULE_NAME = SCHEDULE_NAMES.CASHFLOW;
 
-describe("Schedule - Cash Flow Verification", () => {
+describe("Cash Flow – Positive End-to-End Flow", () => {
   before(function () {
     cy.fixture("users").then((users) => {
+      this.users = users;
       loginPage.visit();
       loginPage.login(users.testUser.email, users.testUser.password);
       loginPage.closeModalIfPresent();
@@ -20,238 +21,266 @@ describe("Schedule - Cash Flow Verification", () => {
     });
   });
 
-  it("Step 1: Create a new schedule", () => {
+  // ── Step 1: Login and Create Schedule ──────────────────────────────────
+
+  it("Step 1a: Create a new schedule", () => {
     schedulePage.createSchedule(SCHEDULE_NAME);
     cy.contains(SCHEDULE_NAME).should("be.visible");
   });
 
-  it("Step 2: Create task + child, open Cash Flow tab, enter forecast 1000, verify reference amount", () => {
+  it("Step 1b: Create a Summary Task and a Child Task", () => {
     taskCreationPage.createTask();
     taskCreationPage.verifyTaskExists("New Task");
 
-    // Add a child to the task
+    // Add a child to make the first task a Summary Task
     taskCreationPage.selectLastTask();
     taskCreationPage.addChildViaPlusMenu();
     taskCreationPage.getTaskCount().should("have.length", 2);
+  });
 
-    // Select the parent/summary task (Row 0) — must use getTaskRows().eq(0)
-    // because selectFirstTask() targets gantt_row_task and skips project rows
+  // ── Step 2: Add Forecast Value ─────────────────────────────────────────
+
+  it("Step 2: Open Summary Task, navigate to Cash Flow tab, add Forecast €1,000 for Jun 2026", () => {
+    // Select the parent/summary task (row 0)
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(500);
     sidePanelPage.open();
-
-    // Navigate to the Cash Flow tab
     sidePanelPage.openCashFlowTab();
 
-    // Enter forecast amount and submit
-    sidePanelPage.setCashFlowForecast(1000);
-    sidePanelPage.clickCashFlowAddValue();
+    // Add Forecast: Jun 2026, €1,000
+    sidePanelPage.addForecastEntry("Jun 2026", 1000);
 
-    // Verify Reference Amount (balance value) shows 1000
-    sidePanelPage.verifyCashFlowReferenceAmount("1000");
+    // Verify
+    sidePanelPage.verifyForecastTotal(1000);
+    sidePanelPage.verifyForecastEntryCount(1);
+    sidePanelPage.verifyBalanceToReceive(1000);
   });
 
-  it("Step 3: Click Add Value again, fill popup (random month, value 100, note Cashflow1), confirm, verify actual value", () => {
-    // Click Add Value a second time to open the cash flow entry popup
-    sidePanelPage.clickCashFlowAddValue();
+  // ── Step 3: Add Actual Value ───────────────────────────────────────────
 
-    // Select a month from the month/year picker
-    sidePanelPage.selectCashFlowPopupMonth();
+  it("Step 3: Add Actual Value €400 for Jun 2026", () => {
+    sidePanelPage.addActualEntry("Jun 2026", 400);
 
-    // Enter value and note
-    sidePanelPage.setCashFlowPopupValue(100);
-    sidePanelPage.setCashFlowPopupNote("Cashflow1");
-
-    // Confirm the popup
-    sidePanelPage.confirmCashFlowPopup();
-
-    // Verify Actual Value reflects the entered amount
-    sidePanelPage.verifyCashFlowActualValue("100");
+    // Verify
+    sidePanelPage.verifyActualTotal(400);
+    sidePanelPage.verifyActualEntryCount(1);
+    sidePanelPage.verifyBalanceToReceive(600);
   });
 
-  it("Step 4: Verify balance (1000-100=900), verify month entry, edit 100→400 (month read-only), confirm", () => {
-    // Balance = Reference (1000) - Actual (100) = 900
-    sidePanelPage.verifyCashFlowReferenceAmount("900");
+  // ── Step 4: Add Another Actual Value ───────────────────────────────────
 
-    // The cashflow entry added in Step 3 should appear in the list
-    sidePanelPage.verifyCashFlowListEntryVisible();
+  it("Step 4: Add another Actual Value €200 for Jul 2026", () => {
+    sidePanelPage.addActualEntry("Jul 2026", 200);
 
-    // Open the edit popup for the first cashflow entry
-    sidePanelPage.clickCashFlowEditIcon();
-
-    // Month field must not be editable in edit mode
-    sidePanelPage.verifyCashFlowPopupMonthNotEditable();
-
-    // Clear the existing value (100) and enter 400
-    sidePanelPage.editCashFlowPopupValue(400);
-
-    // Confirm the edit
-    sidePanelPage.confirmCashFlowPopup();
+    // Verify
+    sidePanelPage.verifyActualTotal(600);
+    sidePanelPage.verifyActualEntryCount(2);
+    sidePanelPage.verifyBalanceToReceive(400);
   });
 
-  it("Step 4a: Verify updated balance (1000-400=600), then delete the cashflow entry", () => {
-    // Balance = Reference (1000) - updated Actual (400) = 600
-    sidePanelPage.verifyCashFlowReferenceAmount("600");
+  // ── Step 5: Edit Actual Value ──────────────────────────────────────────
 
-    // Delete the cashflow entry
-    sidePanelPage.clickCashFlowDeleteIcon();
+  it("Step 5: Edit the Jun 2026 actual entry from €400 to €500", () => {
+    // Jun 2026 is the first actual entry (index 0)
+    sidePanelPage.editActualEntry(0, 500);
+
+    // Verify
+    sidePanelPage.verifyActualTotal(700);
+    sidePanelPage.verifyBalanceToReceive(300);
   });
 
-  it("Step 5: Outdent child task, verify row-0 cashflow is editable and readable", () => {
-    // Close the side panel so the row-click registers cleanly
-    sidePanelPage.close();
+  // ── Step 6: Add Another Forecast Entry ─────────────────────────────────
 
-    // Outdent the child (row-1) via right-click context menu
-    // → row-0 is no longer a summary task after this
-    taskCreationPage.outdentTaskAtRow(1);
+  it("Step 6: Add Forecast €1,500 for Aug 2026", () => {
+    sidePanelPage.addForecastEntry("Aug 2026", 1500);
 
-    // Select the (now regular) task at row-0 and open its Cash Flow tab
-    taskCreationPage.getTaskRows().eq(0).click();
-    cy.wait(300);
-    sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
-
-    // Verify the forecast input is NOT editable — row-0 is now a regular task,
-    // only summary tasks allow cashflow forecast editing
-    sidePanelPage.verifyCashFlowForecastNotEditable();
-
-    // Verify the reference amount is still visible — "readable"
-    sidePanelPage.verifyCashFlowReferenceVisible();
+    // Verify
+    sidePanelPage.verifyForecastTotal(2500);
+    sidePanelPage.verifyForecastEntryCount(2);
+    sidePanelPage.verifyBalanceToReceive(1800);
   });
 
-  it("Step 5a: Indent child task back, verify cashflow is editable in row-0 (summary task)", () => {
-    // Close side panel so the indent context menu is not blocked
-    sidePanelPage.close();
+  // ── Step 7: Delete a Forecast Entry ────────────────────────────────────
 
-    // Indent row-1 back under row-0 → row-0 becomes a summary task again
-    taskCreationPage.indentTaskAtRow(1);
+  it("Step 7: Delete the Jun 2026 forecast entry (€1,000)", () => {
+    // Jun 2026 is the first forecast entry (index 0)
+    sidePanelPage.deleteForecastEntry(0);
 
-    // Select row-0 (now summary/parent task again) and check cashflow
-    taskCreationPage.getTaskRows().eq(0).click();
-    cy.wait(300);
-    sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
-
-    // Verify the forecast input is still editable in the summary task
-    sidePanelPage.verifyCashFlowForecastEditable();
+    // Verify
+    sidePanelPage.verifyForecastTotal(1500);
+    sidePanelPage.verifyForecastEntryCount(1);
+    sidePanelPage.verifyBalanceToReceive(800);
   });
 
-  it("Step 6: Add resource 'Jagadeeshwar M test' to row-0, verify after page reload", () => {
-    // Close side panel, then select row-0 (Task-1 / summary task)
-    sidePanelPage.close();
-    taskCreationPage.getTaskRows().eq(0).click();
-    cy.wait(300);
-    sidePanelPage.open();
+  // ── Step 8: Delete an Actual Entry ─────────────────────────────────────
 
-    // Open the Resources tab in the side panel
-    sidePanelPage.openResourcesTab();
+  it("Step 8: Delete the Jul 2026 actual entry (€200)", () => {
+    // After the Jun edit (€500), Jul (€200) is the second entry (index 1)
+    sidePanelPage.deleteActualEntry(1);
 
-    // Click the Add button to open the resource allocation popup
-    sidePanelPage.clickResourcesAddButton();
+    // Verify
+    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyActualEntryCount(1);
+    sidePanelPage.verifyBalanceToReceive(1000);
+  });
 
-    // Select "Jagadeeshwar M test" from the Resources dropdown
-    sidePanelPage.selectResource("Jagadeeshwar M test");
+  // ── Step 9: Verify Data Persistence ────────────────────────────────────
 
-    // Set allocation to 100 %
-    sidePanelPage.setResourceAllocation(100);
-
-    // Save the allocation
-    sidePanelPage.saveResourceAllocation();
-
-    // Reload page and wait for the gantt to re-render
+  it("Step 9: Refresh the page and verify data persists", () => {
     cy.reload();
     cy.get(".gantt_grid_data", { timeout: 15000 }).should("be.visible");
     cy.wait(1000);
 
-    // Re-open the side panel for row-0 and navigate to Resources tab
+    // Re-select the summary task and open Cash Flow tab
+    taskCreationPage.getTaskRows().eq(0).click();
+    cy.wait(500);
+    sidePanelPage.open();
+    sidePanelPage.openCashFlowTab();
+
+    // Verify all values remain unchanged
+    sidePanelPage.verifyForecastTotal(1500);
+    sidePanelPage.verifyForecastEntryCount(1);
+    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyActualEntryCount(1);
+    sidePanelPage.verifyBalanceToReceive(1000);
+  });
+
+  // ── Step 10: Outdent Child Task ────────────────────────────────────────
+
+  it("Step 10: Outdent the child task and verify Cash Flow data is retained", () => {
+    sidePanelPage.close();
+
+    // Outdent the child (row 1)
+    taskCreationPage.outdentTaskAtRow(1);
+
+    // Select the summary task (row 0) and verify Cash Flow data
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(300);
     sidePanelPage.open();
-    sidePanelPage.openResourcesTab();
+    sidePanelPage.openCashFlowTab();
 
-    // Click the section title and verify at least one resource name appears in the list
-    sidePanelPage.verifyResourceInList();
+    sidePanelPage.verifyForecastTotal(1500);
+    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBalanceToReceive(1000);
   });
 
-  it("Step 6a: Logout, login as Non-PM user, verify no Cash Flow tab in side panel", () => {
-    // Close the side panel before logging out
+  // ── Step 11: Indent Child Task Back ────────────────────────────────────
+
+  it("Step 11: Indent the task back under the Summary Task and verify data intact", () => {
     sidePanelPage.close();
 
-    // --- Logout ---
+    // Indent row 1 back under row 0
+    taskCreationPage.indentTaskAtRow(1);
+
+    // Select the summary task (row 0) and verify Cash Flow data
+    taskCreationPage.getTaskRows().eq(0).click();
+    cy.wait(300);
+    sidePanelPage.open();
+    sidePanelPage.openCashFlowTab();
+
+    sidePanelPage.verifyForecastTotal(1500);
+    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBalanceToReceive(1000);
+  });
+
+  // ── Step 12: Assign Resource ───────────────────────────────────────────
+
+  it("Step 12: Assign a resource and verify Cash Flow values remain unchanged", () => {
+    // Open Resources tab for the summary task
+    sidePanelPage.openResourcesTab();
+    sidePanelPage.clickResourcesAddButton();
+    sidePanelPage.selectResource("User MJ");
+    sidePanelPage.setResourceAllocation(100);
+    sidePanelPage.saveResourceAllocation();
+
+    // Reload and re-verify
+    cy.reload();
+    cy.get(".gantt_grid_data", { timeout: 15000 }).should("be.visible");
+    cy.wait(1000);
+
+    taskCreationPage.getTaskRows().eq(0).click();
+    cy.wait(300);
+    sidePanelPage.open();
+
+    // Verify resource persists
+    sidePanelPage.openResourcesTab();
+    sidePanelPage.verifyResourceInList();
+
+    // Verify Cash Flow values unchanged
+    sidePanelPage.openCashFlowTab();
+    sidePanelPage.verifyForecastTotal(1500);
+    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBalanceToReceive(1000);
+  });
+
+  // ── Step 13: Permission Validation ─────────────────────────────────────
+
+  it("Step 13a: Logout, login as Non-PM user, verify Cash Flow tab is not visible", () => {
+    sidePanelPage.close();
+
+    // Logout
     cy.get(COMMON.userMenuTrigger).click();
     cy.wait(500);
     cy.get(COMMON.logoutButton).click();
     cy.wait(2000);
 
-    // --- Login as Non-PM user ---
+    // Login as Non-PM user
     cy.fixture("users").then((users) => {
       loginPage.login(users.nonPmUser.email, users.nonPmUser.password);
     });
     loginPage.closeModalIfPresent();
     loginPage.closeNotificationIfPresent();
 
-    // --- Navigate to the same project and schedule ---
+    // Navigate to the same project and schedule
     dashboardPage.openProjectBySearch("Automation Project");
     dashboardPage.selectWorkspaceByIndex(5);
     schedulePage.openScheduleByName(SCHEDULE_NAME);
 
-    // --- Click a task row and open the side panel ---
+    // Open side panel and verify Cash Flow tab is NOT present
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(300);
     sidePanelPage.open();
-
-    // --- Verify Cash Flow tab is NOT present for Non-PM user ---
     sidePanelPage.verifyNoCashFlowTab();
   });
 
-  it("Step 7: Logout Non-PM user, login as PM user, delete the schedule", () => {
-    // Close the side panel before logging out
+  it("Step 13b: Logout Non-PM user, login as PM user, verify Cash Flow data is accessible", () => {
     sidePanelPage.close();
 
-    // --- Logout Non-PM user ---
+    // Logout Non-PM user
     cy.get(COMMON.userMenuTrigger).click();
     cy.wait(500);
     cy.get(COMMON.logoutButton).click();
     cy.wait(2000);
 
-    // --- Login as PM user ---
+    // Login as PM user
     cy.fixture("users").then((users) => {
       loginPage.login(users.testUser.email, users.testUser.password);
     });
     loginPage.closeModalIfPresent();
     loginPage.closeNotificationIfPresent();
 
-    // --- Navigate to the same project and schedule list ---
+    // Navigate to the same project and schedule
     dashboardPage.openProjectBySearch("Automation Project");
     dashboardPage.selectWorkspaceByIndex(5);
+    schedulePage.openScheduleByName(SCHEDULE_NAME);
 
-    // --- Delete the schedule and verify it no longer exists ---
+    // Open side panel and verify Cash Flow data still correct
+    taskCreationPage.getTaskRows().eq(0).click();
+    cy.wait(300);
+    sidePanelPage.open();
+    sidePanelPage.openCashFlowTab();
+
+    sidePanelPage.verifyForecastTotal(1500);
+    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBalanceToReceive(1000);
+  });
+
+  // ── Step 14: Delete Schedule ───────────────────────────────────────────
+
+  it("Step 14: Delete the schedule and verify it is removed", () => {
+    sidePanelPage.close();
+    schedulePage.goBackToScheduleList();
     schedulePage.deleteScheduleByName(SCHEDULE_NAME);
     schedulePage.verifyScheduleDoesNotExist(SCHEDULE_NAME);
   });
-
-  // it("Step 5: Set forecast to -1000, add actual 100, verify balance adds (−1000+100=−900)", () => {
-  //   // Clear the existing forecast and enter -1000
-  //   sidePanelPage.setCashFlowForecast(-1000);
-  //   sidePanelPage.clickCashFlowAddValue();
-
-  //   // Open the Add Value popup (second click)
-  //   sidePanelPage.clickCashFlowAddValue();
-
-  //   // Fill the popup: pick a month, enter value 100, confirm
-  //   sidePanelPage.selectCashFlowPopupMonth();
-  //   sidePanelPage.setCashFlowPopupValue(100);
-  //   sidePanelPage.confirmCashFlowPopup();
-
-  //   // With a negative forecast the actual ADDS to the balance:
-  //   // Balance = −1000 + 100 = −900
-  //   sidePanelPage.verifyCashFlowReferenceAmount(-900);
-  // });
-
-  // [Superseded by Step 7] Delete schedule after PM user re-login
-  // it("Step 6: Go back to schedule list, delete the created schedule, verify deleted", () => {
-  //   schedulePage.goBackToScheduleList();
-  //   schedulePage.deleteScheduleByName(SCHEDULE_NAME);
-  //   schedulePage.verifyScheduleDoesNotExist(SCHEDULE_NAME);
-  // });
 });

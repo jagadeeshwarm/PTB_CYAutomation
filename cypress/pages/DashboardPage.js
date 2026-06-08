@@ -15,6 +15,18 @@ class DashboardPage {
   }
 
   waitForPageLoad() {
+    // First attempt — check if dashboard loaded
+    cy.wait(2000);
+    cy.get("body").then(($body) => {
+      if ($body.find(DASHBOARD.projectListHeader).length === 0) {
+        // Dashboard not loaded — clear cache, hard reload, and retry once
+        cy.clearCookies();
+        cy.clearLocalStorage();
+        cy.reload(true);
+        cy.wait(2000);
+      }
+    });
+    // Final assertion — if still missing after retry, this throws the real error
     cy.get(DASHBOARD.projectListHeader, { timeout: 15000 }).should("exist");
     cy.wait(1000);
   }

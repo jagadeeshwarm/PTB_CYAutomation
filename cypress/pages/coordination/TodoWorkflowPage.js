@@ -329,6 +329,19 @@ class TodoWorkflowPage {
       .as("todoHref");
   }
 
+  // ── Board toolbar actions ──────────────────────────────────────────────────
+
+  /** Click the 3-dots menu and enable the Completed column on the board. */
+  enableCompletedColumn() {
+    cy.get(TODO_WORKFLOW.moreOptionsButton).click();
+    cy.wait(500);
+    cy.get(TODO_WORKFLOW.completedColumnCheckbox).click();
+    cy.wait(1000);
+    // Close the dropdown by clicking elsewhere
+    cy.get("body").click(0, 0);
+    cy.wait(500);
+  }
+
   // ── Status change (side panel / detail page) ──────────────────────────────
 
   /**

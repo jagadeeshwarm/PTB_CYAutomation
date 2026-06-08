@@ -257,6 +257,182 @@ class SidePanelPage {
     cy.wait(500);
   }
 
+  // ── Cash Flow – Forecast CRUD ──────────────────────────────────────────
+
+  clickAddForecast() {
+    cy.get(SIDEPANEL.cfForecastAddButton).click();
+    cy.wait(800);
+  }
+
+  /** Pick month in the add/edit popup (e.g. "Jun 2026").
+   *  The month input is readonly — click it to open the picker,
+   *  navigate to the correct year via arrows, then click the month
+   *  inside the month-table. */
+  selectPopupMonth(monthText) {
+    const [month, year] = monthText.split(" ");
+    const targetYear = parseInt(year, 10);
+
+    // Click the input to open the month picker panel
+    cy.get(SIDEPANEL.cashFlowPopupMonthInput).click({ force: true });
+    cy.wait(500);
+
+    // The picker renders inside: date-range-popup > ... > month-table > table
+    const monthTable = "date-range-popup month-table table";
+
+    // The year header and nav arrows live under: inner-popup > div > div > month-header > div
+    const yearHeader = "date-range-popup inner-popup month-header > div > div";
+    const prevArrow = "date-range-popup inner-popup month-header > div > button:first-child";
+    const nextArrow = "date-range-popup inner-popup month-header > div > button:last-child";
+
+    // Navigate to the correct year using the < > arrows
+    const navigateToYear = () => {
+      cy.get(yearHeader)
+        .invoke("text")
+        .then((displayedYear) => {
+          const current = parseInt(displayedYear.trim(), 10);
+          if (current < targetYear) {
+            cy.get(nextArrow).click();
+            cy.wait(300);
+            navigateToYear();
+          } else if (current > targetYear) {
+            cy.get(prevArrow).click();
+            cy.wait(300);
+            navigateToYear();
+          }
+        });
+    };
+    navigateToYear();
+
+    // Click the matching month cell inside the month-table
+    cy.get(`${monthTable} td`)
+      .filter((_i, td) => td.textContent.trim().toLowerCase() === month.toLowerCase())
+      .first()
+      .click();
+    cy.wait(300);
+  }
+
+  enterPopupAmount(amount) {
+    cy.get(SIDEPANEL.cashFlowPopupValueInput)
+      .click()
+      .type("{selectall}{backspace}")
+      .type(String(amount));
+    cy.wait(300);
+  }
+
+  confirmPopup() {
+    cy.get(SIDEPANEL.cashFlowPopupConfirmButton).click();
+    cy.wait(1000);
+  }
+
+  /** Add a Forecast entry: click +, pick month, enter amount, save. */
+  addForecastEntry(monthText, amount) {
+    this.clickAddForecast();
+    this.selectPopupMonth(monthText);
+    this.enterPopupAmount(amount);
+    this.confirmPopup();
+  }
+
+  /** Edit the Nth (0-based) forecast entry's amount. */
+  editForecastEntry(entryIndex, newAmount) {
+    cy.get(SIDEPANEL.cfForecastList)
+      .find(SIDEPANEL.cfForecastEditIcon)
+      .eq(entryIndex)
+      .click();
+    cy.wait(800);
+    this.enterPopupAmount(newAmount);
+    this.confirmPopup();
+  }
+
+  /** Delete the Nth (0-based) forecast entry. */
+  deleteForecastEntry(entryIndex) {
+    cy.get(SIDEPANEL.cfForecastList)
+      .find(SIDEPANEL.cfForecastDeleteIcon)
+      .eq(entryIndex)
+      .click();
+    cy.wait(1000);
+  }
+
+  // ── Cash Flow – Actual CRUD ────────────────────────────────────────────
+
+  clickAddActual() {
+    cy.get(SIDEPANEL.cfActualAddButton).click();
+    cy.wait(800);
+  }
+
+  /** Add an Actual entry: click +, pick month, enter amount, save. */
+  addActualEntry(monthText, amount) {
+    this.clickAddActual();
+    this.selectPopupMonth(monthText);
+    this.enterPopupAmount(amount);
+    this.confirmPopup();
+  }
+
+  /** Edit the Nth (0-based) actual entry's amount. */
+  editActualEntry(entryIndex, newAmount) {
+    cy.get(SIDEPANEL.cfActualList)
+      .find(SIDEPANEL.cfActualEditIcon)
+      .eq(entryIndex)
+      .click();
+    cy.wait(800);
+    this.enterPopupAmount(newAmount);
+    this.confirmPopup();
+  }
+
+  /** Delete the Nth (0-based) actual entry. */
+  deleteActualEntry(entryIndex) {
+    cy.get(SIDEPANEL.cfActualList)
+      .find(SIDEPANEL.cfActualDeleteIcon)
+      .eq(entryIndex)
+      .click();
+    cy.wait(1000);
+  }
+
+  // ── Cash Flow – Verification ───────────────────────────────────────────
+
+  /** Parse a currency string like "€1,000.00" or "€600" into a number. */
+  _parseCurrency(text) {
+    const trimmed = text.trim();
+    const isNegative = trimmed.includes("-");
+    const numeric = parseFloat(trimmed.replace(/[^0-9.]/g, ""));
+    return isNegative ? -numeric : numeric;
+  }
+
+  verifyForecastTotal(expected) {
+    cy.get(SIDEPANEL.cfForecastTotal)
+      .invoke("text")
+      .then((text) => {
+        expect(this._parseCurrency(text)).to.equal(expected);
+      });
+  }
+
+  verifyActualTotal(expected) {
+    cy.get(SIDEPANEL.cfActualTotal)
+      .invoke("text")
+      .then((text) => {
+        expect(this._parseCurrency(text)).to.equal(expected);
+      });
+  }
+
+  verifyBalanceToReceive(expected) {
+    cy.get(SIDEPANEL.cfBalanceRow)
+      .invoke("text")
+      .then((text) => {
+        expect(this._parseCurrency(text)).to.equal(expected);
+      });
+  }
+
+  verifyForecastEntryCount(count) {
+    cy.get(SIDEPANEL.cfForecastList)
+      .find(SIDEPANEL.cfForecastEditIcon)
+      .should("have.length", count);
+  }
+
+  verifyActualEntryCount(count) {
+    cy.get(SIDEPANEL.cfActualList)
+      .find(SIDEPANEL.cfActualEditIcon)
+      .should("have.length", count);
+  }
+
   setCashFlowForecast(amount) {
     cy.get(SIDEPANEL.cashFlowForecastInput)
       .type("{selectall}{backspace}")
