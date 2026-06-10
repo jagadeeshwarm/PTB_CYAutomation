@@ -37,9 +37,18 @@ describe("Schedule - Child of Child Task Status Verification", () => {
     taskCreationPage.createTask();
     taskCreationPage.verifyTaskExists("New Task");
 
-    taskCreationPage.selectTask("New Task");
+    // Click row 0 (parent) → add child. Row 1 (child) now exists.
+    // NOTE: createTask() (which just clicks the top + button) does NOT add a
+    // child when a row is selected — it has to be addChildViaPlusMenu() which
+    // opens the + menu and explicitly clicks the Child option.
+    taskCreationPage.selectTaskByRow(0);
     taskCreationPage.addChildViaPlusMenu();
 
+    // Click the just-created child task → add child. Row 2 (child-of-child)
+    // now exists. We use selectLastTask() (not selectTaskByRow(1)) because
+    // immediately after addChild, the new row briefly enters inline-edit
+    // state and loses the .gantt_row_task class — so .eq(1) finds nothing.
+    // selectLastTask() uses .last() which tolerates that transient state.
     taskCreationPage.selectLastTask();
     taskCreationPage.addChildViaPlusMenu();
 

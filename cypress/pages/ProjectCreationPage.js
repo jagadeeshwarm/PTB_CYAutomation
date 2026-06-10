@@ -228,6 +228,80 @@ class ProjectCreationPage {
       .click();
     cy.wait(1000);
   }
+
+  // --- Skip-template variants (TC01) ---
+  // The Folder Structure and Schedule Template steps are optional after import.
+  // The "Skip" action is just clickNext without selecting anything.
+  skipFolderStructureTemplate() {
+    this.clickNext();
+  }
+
+  skipScheduleTemplate() {
+    this.clickNext();
+  }
+
+  // --- Project ID capture (after create) ---
+  // After project creation the URL becomes /app/<projectId>/...; capture it
+  // so subsequent test cases can deep-link to the checklist.
+  captureProjectIdFromUrl(alias = "projectId") {
+    return cy.url().then((url) => {
+      const m = url.match(/\/app\/([0-9a-f-]{8,})\//i);
+      const projectId = m ? m[1] : null;
+      expect(projectId, `Captured project ID from URL: ${url}`).to.exist;
+      cy.wrap(projectId).as(alias);
+      return projectId;
+    });
+  }
+
+  // --- Project deletion (TC08) ---
+  // Navigate to the Projects page, click the project card matching the name,
+  // and use the card's context menu / delete option.
+  navigateToProjectsList() {
+    cy.visit("/app/projects");
+    cy.wait(2000);
+  }
+
+  // Click the card whose title contains the given project name/number.
+  clickProjectCardByText(text) {
+    cy.contains("app-project-card, .project-card, cmacs-card", text, {
+      timeout: 20000,
+    })
+      .first()
+      .click();
+    cy.wait(1500);
+  }
+
+  // Open the more-actions menu on the project card and click Delete.
+  // Then confirm in the danger modal. Selectors are intentionally broad —
+  // the projects page UI varies across builds.
+  deleteCurrentProject() {
+    cy.get("body").then(($body) => {
+      // Try a dedicated delete icon on the project header first
+      const $deleteBtn = $body.find(
+        "[data-test='project-delete'], button:has(i.iconUILarge-Trash), button:has(i.iconUISmall-Trash)",
+      );
+      if ($deleteBtn.length > 0) {
+        cy.wrap($deleteBtn).first().click({ force: true });
+      } else {
+        // Fall back to a kebab/more menu then a Delete menu item
+        cy.get("button:has(i.iconUILarge-Dots), button:has(i.iconUISmall-Dots)")
+          .first()
+          .click({ force: true });
+        cy.wait(500);
+        cy.contains(`${COMMON.overlayContainer} li, ${COMMON.overlayContainer} a`, /delete/i)
+          .click({ force: true });
+      }
+    });
+    cy.wait(500);
+    // Confirm in danger modal
+    cy.get(COMMON.modalDangerButton, { timeout: 10000 }).click();
+    cy.wait(3000);
+  }
+
+  verifyProjectNotInList(projectIdentifier) {
+    this.navigateToProjectsList();
+    cy.contains(projectIdentifier).should("not.exist");
+  }
 }
 
 export default new ProjectCreationPage();

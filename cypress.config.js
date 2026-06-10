@@ -22,6 +22,12 @@ module.exports = defineConfig({
     screenshotOnRunFailure: true,
     setupNodeEvents(on, config) {
       require('cypress-mochawesome-reporter/plugin')(on);
+      const {
+        xlsxRead,
+        xlsxEditCell,
+        xlsxRestore,
+      } = require('./cypress/support/utils/xlsxNodeUtils');
+      on('task', { xlsxRead, xlsxEditCell, xlsxRestore });
     },
   },
 })
