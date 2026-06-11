@@ -1,8 +1,8 @@
-import loginPage from "../../../pages/LoginPage";
-import dashboardPage from "../../../pages/DashboardPage";
-import formTemplatePage from "../../../pages/fieldlogs/FormTemplatePage";
-import fieldLogsPage from "../../../pages/fieldlogs/FieldLogsPage";
-import { FIELD_LOGS } from "../../../support/selectors";
+import loginPage from "../../pages/LoginPage";
+import dashboardPage from "../../pages/DashboardPage";
+import formTemplatePage from "../../pages/fieldlogs/FormTemplatePage";
+import fieldLogsPage from "../../pages/fieldlogs/FieldLogsPage";
+import { FIELD_LOGS } from "../../support/selectors";
 
 // Unique template name per run so the dropdown verification is unambiguous.
 const pad = (n) => String(n).padStart(2, "0");

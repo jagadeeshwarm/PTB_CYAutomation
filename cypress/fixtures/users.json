@@ -10,5 +10,13 @@
   "importUser": {
     "email": "onlinesupport@plantobuild.online",
     "password": "PToB_2023!"
+  },
+  "importPmUser": {
+    "email": "adminuser001@yopmail.com",
+    "password": "Password1234!"
+  },
+  "importNonPmUser": {
+    "email": "mjuser001@yopmail.com",
+    "password": "Password1234!"
   }
 }

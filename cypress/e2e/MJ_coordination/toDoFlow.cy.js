@@ -1,6 +1,6 @@
-import loginPage from "../../../pages/LoginPage";
-import dashboardPage from "../../../pages/DashboardPage";
-import todoWorkflowPage from "../../../pages/coordination/TodoWorkflowPage";
+import loginPage from "../../pages/LoginPage";
+import dashboardPage from "../../pages/DashboardPage";
+import todoWorkflowPage from "../../pages/coordination/TodoWorkflowPage";
 
 // Unique title per run so the card is unambiguous on the board.
 const pad = (n) => String(n).padStart(2, "0");

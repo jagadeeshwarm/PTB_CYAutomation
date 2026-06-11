@@ -1,12 +1,22 @@
-import loginPage from "../../../pages/LoginPage";
-import dashboardPage from "../../../pages/DashboardPage";
-import projectCreationPage from "../../../pages/ProjectCreationPage";
-import checklistPage from "../../../pages/ChecklistPage";
+import loginPage from "../../pages/LoginPage";
+import dashboardPage from "../../pages/DashboardPage";
+import projectCreationPage from "../../pages/ProjectCreationPage";
+import checklistPage from "../../pages/ChecklistPage";
 
 const COMPANY_NAME = "Schuco India";
 const IMPORT_FILE_FIXTURE = "Central IKON_PIS_Latest_version.xlsx";
 const IMPORT_FILE_PATH = `cypress/fixtures/${IMPORT_FILE_FIXTURE}`;
 const PROJECT_NUMBER = `IMP-${Date.now()}`;
+
+// Location is a required step in the Create Project wizard. The import doesn't
+// auto-populate the required Line 1 / City / Zip fields, so we fill them here.
+const LOCATION = {
+  line1: "alt.f coworking | Coworking Space In Financial District Hyderabad",
+  city: "Nanakramguda",
+  state: "Telangana",
+  zip: "500032",
+  country: "India",
+};
 
 // Expected values seen in the user-provided Project Info Sheet sample HTML.
 // Used for the TC02 sanity check (company/project header text).
@@ -35,14 +45,14 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
     cy.then(function () {
       loginPage.visit();
       loginPage.login(
-        this.users.importUser.email,
-        this.users.importUser.password,
+        this.users.importPmUser.email,
+        this.users.importPmUser.password,
       );
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
       projectCreationPage.switchCompany(
         COMPANY_NAME,
-        this.users.importUser.password,
+        this.users.importPmUser.password,
       );
       dashboardPage.waitForPageLoad();
     });
@@ -63,7 +73,15 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
     projectCreationPage.clearAndTypeProjectNumber(PROJECT_NUMBER);
     projectCreationPage.clickNext();
 
-    // Location auto-populated → Next
+    // Location — fill required address fields (Line 1, City, Zip are required
+    // and not auto-populated by the import), then Next.
+    projectCreationPage.fillLocationFields(
+      LOCATION.line1,
+      LOCATION.city,
+      LOCATION.state,
+      LOCATION.zip,
+      LOCATION.country,
+    );
     projectCreationPage.clickNext();
     // Sales → Next
     projectCreationPage.clickNext();
@@ -103,7 +121,9 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
   //     (a Title-with-blank-values would indicate the import lost data)
   it("TC03: Checklist data is populated for every section", function () {
     const xlsx = this.xlsxData;
-    expect(xlsx.sheets.length, "xlsx has at least one sheet").to.be.greaterThan(0);
+    expect(xlsx.sheets.length, "xlsx has at least one sheet").to.be.greaterThan(
+      0,
+    );
 
     checklistPage.getSectionsWithTables().then((sections) => {
       expect(sections.length, "PIS has rendered tables").to.be.greaterThan(0);
@@ -156,8 +176,8 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
       cy.window().then((w) => w.sessionStorage.clear());
       loginPage.visit();
       loginPage.login(
-        this.users.nonPmUser.email,
-        this.users.nonPmUser.password,
+        this.users.importNonPmUser.email,
+        this.users.importNonPmUser.password,
       );
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
@@ -187,14 +207,14 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
       cy.window().then((w) => w.sessionStorage.clear());
       loginPage.visit();
       loginPage.login(
-        this.users.importUser.email,
-        this.users.importUser.password,
+        this.users.importPmUser.email,
+        this.users.importPmUser.password,
       );
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
       projectCreationPage.switchCompany(
         COMPANY_NAME,
-        this.users.importUser.password,
+        this.users.importPmUser.password,
       );
 
       // Edit one cell in the XLSX (creates a .bak so xlsxRestore can revert).
@@ -241,7 +261,8 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
           const still = after.some(
             (r) => r[0] && r[0].toLowerCase().includes(title.toLowerCase()),
           );
-          expect(still, `Row '${title}' should be removed after delete`).to.be.false;
+          expect(still, `Row '${title}' should be removed after delete`).to.be
+            .false;
         });
       });
     });

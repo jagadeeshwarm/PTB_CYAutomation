@@ -1,6 +1,6 @@
-import loginPage from "../../../pages/LoginPage";
-import dashboardPage from "../../../pages/DashboardPage";
-import projectCreationPage from "../../../pages/ProjectCreationPage";
+import loginPage from "../../pages/LoginPage";
+import dashboardPage from "../../pages/DashboardPage";
+import projectCreationPage from "../../pages/ProjectCreationPage";
 
 const COMPANY_NAME = "Schuco India";
 const LOCATION = {
@@ -27,7 +27,7 @@ describe("Manual Project Creation - Advanced Settings", () => {
   it("Step 1: Switch company to Schuco India", function () {
     projectCreationPage.switchCompany(
       COMPANY_NAME,
-      this.users.importUser.password
+      this.users.importUser.password,
     );
     dashboardPage.waitForPageLoad();
   });
@@ -66,7 +66,7 @@ describe("Manual Project Creation - Advanced Settings", () => {
       LOCATION.city,
       LOCATION.state,
       LOCATION.zip,
-      LOCATION.country
+      LOCATION.country,
     );
   });
 

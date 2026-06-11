@@ -6,7 +6,7 @@
   "scripts": {
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:schedule": "cypress run --spec cypress/e2e/schedule/**/*.js"
+    "cy:run:schedule": "cypress run --spec cypress/e2e/Schedule/**/*.js"
   },
   "keywords": [],
   "author": "",

@@ -1,6 +1,6 @@
-import loginPage from "../../../pages/LoginPage";
-import dashboardPage from "../../../pages/DashboardPage";
-import coordinationFilesPage from "../../../pages/coordination/CoordinationFilesPage";
+import loginPage from "../../pages/LoginPage";
+import dashboardPage from "../../pages/DashboardPage";
+import coordinationFilesPage from "../../pages/coordination/CoordinationFilesPage";
 
 const SINGLE_FILE = "upload-test-files/SingleTestFile.txt";
 const SINGLE_FILE_PATH = "cypress/fixtures/upload-test-files/SingleTestFile.txt";

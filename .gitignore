@@ -1,2 +1,7 @@
 # dependencies
 /node_modules
+
+# Cypress test artifacts (regenerated on every run)
+cypress/reports/
+cypress/screenshots/
+cypress/downloads/
