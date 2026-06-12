@@ -26,8 +26,9 @@ module.exports = defineConfig({
         xlsxRead,
         xlsxEditCell,
         xlsxRestore,
+        findLatestFile,
       } = require('./cypress/support/utils/xlsxNodeUtils');
-      on('task', { xlsxRead, xlsxEditCell, xlsxRestore });
+      on('task', { xlsxRead, xlsxEditCell, xlsxRestore, findLatestFile });
     },
   },
 })

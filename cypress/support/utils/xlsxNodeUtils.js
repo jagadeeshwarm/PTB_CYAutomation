@@ -60,6 +60,22 @@ async function xlsxEditCell({ path: filePath, sheet, row, col, newValue }) {
   return { oldValue: oldValue == null ? "" : String(oldValue) };
 }
 
+// Return the absolute path of the most recently modified file in `dir` whose
+// name ends with `ext` (e.g. ".xlsx"). Returns null if none. Used to locate a
+// just-downloaded export without knowing its exact filename.
+async function findLatestFile({ dir, ext }) {
+  if (!fs.existsSync(dir)) return null;
+  const matches = fs
+    .readdirSync(dir)
+    .filter((f) => (ext ? f.toLowerCase().endsWith(ext.toLowerCase()) : true))
+    .map((f) => {
+      const full = path.join(dir, f);
+      return { full, mtime: fs.statSync(full).mtimeMs };
+    })
+    .sort((a, b) => b.mtime - a.mtime);
+  return matches.length ? matches[0].full : null;
+}
+
 // Restore the file from .bak (created by xlsxEditCell). No-op if no backup.
 async function xlsxRestore({ path: filePath }) {
   const absPath = path.resolve(filePath);
@@ -72,4 +88,4 @@ async function xlsxRestore({ path: filePath }) {
   return { restored: false };
 }
 
-module.exports = { xlsxRead, xlsxEditCell, xlsxRestore };
+module.exports = { xlsxRead, xlsxEditCell, xlsxRestore, findLatestFile };
