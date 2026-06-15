@@ -19,9 +19,7 @@ class DashboardPage {
     cy.wait(2000);
     cy.get("body").then(($body) => {
       if ($body.find(DASHBOARD.projectListHeader).length === 0) {
-        // Dashboard not loaded — clear cache, hard reload, and retry once
-        cy.clearCookies();
-        cy.clearLocalStorage();
+        // Dashboard not loaded — hard reload and retry once
         cy.reload(true);
         cy.wait(2000);
       }

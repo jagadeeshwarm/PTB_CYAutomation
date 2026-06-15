@@ -229,6 +229,22 @@ class ProjectCreationPage {
     cy.wait(1000);
   }
 
+  // Opens the teams dropdown, types the team name into the search field to
+  // filter the list, then clicks the match. Do NOT press {esc} — it closes
+  // the wizard modal itself, not just the dropdown.
+  selectTeam(teamName) {
+    this.openTeamsDropdown();
+    cy.get(PROJECT_CREATION.teamsSearchInput)
+      .clear({ force: true })
+      .type(teamName, { force: true });
+    cy.wait(800);
+    cy.get(PROJECT_CREATION.teamsDropdownList)
+      .find("li")
+      .contains(teamName)
+      .click();
+    cy.wait(800);
+  }
+
   // --- Skip-template variants (TC01) ---
   // The Folder Structure and Schedule Template steps are optional after import.
   // The "Skip" action is just clickNext without selecting anything.
@@ -241,15 +257,18 @@ class ProjectCreationPage {
   }
 
   // --- Project ID capture (after create) ---
-  // After project creation the URL becomes /app/<projectId>/...; capture it
-  // so subsequent test cases can deep-link to the checklist.
+  // After project creation the URL becomes /app/project/portal/<projectId>.
+  // Extract the trailing UUID so subsequent test cases can deep-link.
   captureProjectIdFromUrl(alias = "projectId") {
     return cy.url().then((url) => {
-      const m = url.match(/\/app\/([0-9a-f-]{8,})\//i);
-      const projectId = m ? m[1] : null;
+      // Match a UUID-shaped segment anywhere in the path, prefer the last one.
+      const matches = url.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi);
+      const projectId = matches ? matches[matches.length - 1] : null;
       expect(projectId, `Captured project ID from URL: ${url}`).to.exist;
-      cy.wrap(projectId).as(alias);
-      return projectId;
+      // Return the chainable from cy.wrap so the alias is set BEFORE the
+      // outer chain resolves. Don't return a sync value here — Cypress
+      // disallows mixing sync returns with cy commands inside .then().
+      return cy.wrap(projectId).as(alias);
     });
   }
 

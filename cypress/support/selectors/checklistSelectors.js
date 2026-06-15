@@ -8,6 +8,26 @@ export const CHECKLIST = {
   // /app/.../checklist when this is clicked.
   sidebarItem: "app-nav-layout a[href*='checklist'], app-nav-layout [routerlink*='checklist']",
 
+  // Top bar main menu container — holds the module links (Home / Schedules /
+  // Checklist / ...). When the viewport is narrow, less-used links collapse
+  // into a 3-dots overflow menu.
+  topBarMainMenu:
+    "app-nav-layout > div > div:nth-child(1) > div > div.main-nav-main-menu",
+  // 3-dots overflow toggle (last clickable child of the main menu). Clicking
+  // it opens a CDK overlay containing the hidden menu items.
+  topBarOverflowToggle:
+    "div.main-nav-main-menu > div:has(i[class*='Dots']), div.main-nav-main-menu .iconUILarge-Dots, div.main-nav-main-menu .iconUISmall-Dots",
+  // List items inside the visible overflow overlay.
+  topBarOverflowList: ".cdk-overlay-container ul:visible li",
+
+  // Secondary top bar (the row directly under the main nav). On some viewport
+  // widths / role combinations, the Checklist link appears here instead of in
+  // the main bar — sometimes directly, sometimes inside its own 3-dots menu.
+  secondaryMenu: ".secondary-menu-area",
+  // 3-dots overflow toggle inside the secondary top bar.
+  secondaryMenuOverflowToggle:
+    ".secondary-menu-area i[class*='Dots'], .secondary-menu-area [class*='dots']:not(i)",
+
   // Checklist landing root
   root: "app-checklist-root",
   bar: "app-checklist-bar",
@@ -50,11 +70,23 @@ export const CHECKLIST = {
   inlineCell: ".cmacs-compact-table-inline-cell",
   cellEditIcon: ".iconUISmall-Edit.cmacs-compact-table-edit-icon",
 
+  // First two editable columns of a row (Title=cell-1, Value=cell-2). The
+  // pencil-icon edit affordance is `i` inside `> div > div`. We use these
+  // when adding/editing rows because the edit icon only renders on hover.
+  titleCell: "td.cmacs-editable-column.cmacs-compact-table-cell-1",
+  valueCell: "td.cmacs-editable-column.cmacs-compact-table-cell-2",
+  titleCellEditIcon: "td.cmacs-editable-column.cmacs-compact-table-cell-1 i",
+  valueCellEditIcon: "td.cmacs-editable-column.cmacs-compact-table-cell-2 i",
+
   // Add-row icon (sticky left column of each row). Clicking it adds a new row
-  // BELOW the row whose icon was clicked.
-  addRowIcon: ".cmacs-compact-table-smart-table-hot-spot-row-add-icon",
-  // Delete-row icon (sticky right column of each row).
-  deleteRowIcon: ".cmacs-compact-table-smart-table-hot-spot-row-delete-icon",
+  // BELOW the row whose icon was clicked. The icon is the `<i>` child of the
+  // hot-spot td — we also accept the legacy "-icon" class form and the td
+  // itself so this stays robust across DOM revisions.
+  addRowIcon:
+    "td.cmacs-compact-table-smart-table-hot-spot-row-add > i, .cmacs-compact-table-smart-table-hot-spot-row-add-icon, td.cmacs-compact-table-smart-table-hot-spot-row-add",
+  // Delete-row icon (sticky right column of each row). Same dual-pattern.
+  deleteRowIcon:
+    "td.cmacs-compact-table-smart-table-hot-spot-row-delete > i, .cmacs-compact-table-smart-table-hot-spot-row-delete-icon, td.cmacs-compact-table-smart-table-hot-spot-row-delete",
 
   // Placeholder text that indicates a cell is empty / ready for input
   emptyCellPlaceholder: ".cmacs-compact-table-field-valid-placeholder",

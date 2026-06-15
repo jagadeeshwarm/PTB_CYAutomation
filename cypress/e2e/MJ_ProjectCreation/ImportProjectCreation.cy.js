@@ -2,6 +2,11 @@ import loginPage from "../../pages/LoginPage";
 import dashboardPage from "../../pages/DashboardPage";
 import projectCreationPage from "../../pages/ProjectCreationPage";
 import checklistPage from "../../pages/ChecklistPage";
+import {
+  parseXlsxSections,
+  flattenSectionAPairs,
+  stripIndexCol,
+} from "../../support/utils/xlsxSectionParser";
 
 const COMPANY_NAME = "Schuco India";
 const IMPORT_FILE_FIXTURE = "Central IKON_PIS_Latest_version.xlsx";
@@ -33,14 +38,32 @@ const ADDED_ROW_VALUE = `auto-value-${Date.now()}`;
 const REUPLOAD_NEW_VALUE = `REUPLOAD_${Date.now()}`;
 const REUPLOAD_TARGET = { sheet: null, row: 2, col: 2 };
 
+// Module-scoped store for the project ID captured in TC01. Cypress's `.as()`
+// aliases are reset between `it()` blocks even with testIsolation:false, so
+// every test after TC01 reads from here instead of `cy.get("@projectId")`.
+let CAPTURED_PROJECT_ID = null;
+
+// Module-scoped store for the source XLSX data. Setting `this.xlsxData`
+// inside a `cy.task(...).then(...)` callback is unreliable — the `this`
+// there isn't the same mocha context that `it()` blocks see. Module scope
+// outlives the whole describe and is read directly in TC03.
+let XLSX_DATA = null;
+
 describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
   before(function () {
+    // Force a wide viewport so the project top bar shows all menu items
+    // (Home / Portal / Teams / Dashboards / Permission / Templates /
+    // Schedules / Checklist / ...). At 1280-ish widths the Checklist link
+    // gets dropped from the bar entirely, which is why it appeared missing
+    // in Cypress while showing in the real browser.
+    cy.viewport(1920, 1080);
     cy.fixture("users").then((users) => {
       this.users = users;
     });
     // Pre-load the XLSX so TC03 has reference data without re-reading.
+    // Store in module scope (XLSX_DATA) — see comment near its declaration.
     cy.task("xlsxRead", { path: IMPORT_FILE_PATH }).then((data) => {
-      cy.wrap(data, { log: false }).as("xlsxData");
+      XLSX_DATA = data;
     });
     cy.then(function () {
       loginPage.visit();
@@ -92,43 +115,100 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
     projectCreationPage.skipFolderStructureTemplate();
     // Skip Schedule Template (just Next)
     projectCreationPage.skipScheduleTemplate();
-    // Teams — skip selecting any team → Next
+    // Teams — select the specific team, then Next.
+    projectCreationPage.selectTeam("Team Sidhi Automation");
     projectCreationPage.clickNext();
 
     // Create
     projectCreationPage.clickCreate();
-    dashboardPage.waitForPageLoad();
+    cy.wait(10000);
+    cy.reload();
+    // After create, the app redirects to /app/project/portal/<projectId>.
+    // Wait for that URL pattern instead of the dashboard's project-bar.
+    cy.url({ timeout: 20000 }).should(
+      "match",
+      /\/app\/project\/portal\/[0-9a-f-]{8,}/i,
+    );
+    cy.wait(2000);
 
-    // Capture project ID from URL for downstream test cases
+    // Capture project ID from URL for downstream test cases. Also persist it
+    // to a module-scoped variable so it survives across `it()` blocks.
     projectCreationPage.captureProjectIdFromUrl("projectId");
+    cy.get("@projectId").then((id) => {
+      CAPTURED_PROJECT_ID = id;
+    });
+
+    // Workaround: the "Checklist" entry only appears in the top bar for the
+    // Schueco India company AND only after a fresh session. Right after create
+    // the link is missing, so wait for the backend to settle, clear the
+    // session, log back in, reopen the project by search, and confirm the
+    // Checklist link is now in the top bar.
+    cy.wait(15000);
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then((w) => w.sessionStorage.clear());
+
+    loginPage.visit();
+    loginPage.login(
+      this.users.importPmUser.email,
+      this.users.importPmUser.password,
+    );
+    loginPage.closeModalIfPresent();
+    loginPage.closeNotificationIfPresent();
+    projectCreationPage.switchCompany(
+      COMPANY_NAME,
+      this.users.importPmUser.password,
+    );
+    dashboardPage.openProjectBySearch(PROJECT_NUMBER);
+    checklistPage.clickChecklistInTopBar();
   });
 
   // ── TC02: Verify Generated PDF (Project Info Sheet UI) ──────────────────
   it("TC02: Open Project Info Sheet and verify Company + Project details", function () {
-    cy.get("@projectId").then((pid) => {
-      checklistPage.visitChecklistFor(pid);
-      checklistPage.openFirstChecklistInSameTab();
-      checklistPage.verifyCompanyDetails(EXPECTED_COMPANY_SUBSTRING);
-      checklistPage.verifyProjectDetails(EXPECTED_PROJECT_SUBSTRING);
-    });
+    // TC01 ended on the Checklist list page (with "Project Info Sheet" row
+    // visible). Continue from there — just open the PIS, no re-navigation.
+    checklistPage.openFirstChecklistInSameTab();
+    // Reload after opening so the PIS sections fully populate before we
+    // start scraping — the company/project address widgets and section
+    // tables can render piecewise on first load.
+    cy.reload();
+    cy.wait(3000);
+    checklistPage.verifyCompanyDetails(EXPECTED_COMPANY_SUBSTRING);
+    checklistPage.verifyProjectDetails(EXPECTED_PROJECT_SUBSTRING);
   });
 
-  // ── TC03: Verify Checklist Data Population ──────────────────────────────
-  // For every section that the import produces a table for, assert:
-  //   - the table exists
-  //   - the section has at least one header
-  //   - for every populated Title row, at least one value cell is non-blank
-  //     (a Title-with-blank-values would indicate the import lost data)
-  it("TC03: Checklist data is populated for every section", function () {
-    const xlsx = this.xlsxData;
+  // ── TC03: Cross-validate rendered PIS against the source XLSX ──────────
+  // Core agenda of this whole test: every (title, value) the user uploaded in
+  // the XLSX must appear in the rendered Project Info Sheet.
+  //
+  // For each section the PIS renders (A, B, C, D, ...):
+  //   1. Find the matching XLSX section by letter
+  //   2. Normalize XLSX rows into [title, value, value, ...] tuples:
+  //      - Section A: 2-pair layout → flattened into single-pair rows
+  //      - Sections B/C/D: drop the leading index column ("1", "2", ...)
+  //   3. For each expected row, locate the PIS row with a matching title and
+  //      assert every non-empty expected value is present in that PIS row.
+  it("TC03: Rendered PIS matches the uploaded XLSX data", function () {
+    const xlsx = XLSX_DATA;
+    expect(xlsx, "xlsx loaded in before() hook").to.exist;
     expect(xlsx.sheets.length, "xlsx has at least one sheet").to.be.greaterThan(
       0,
     );
 
-    checklistPage.getSectionsWithTables().then((sections) => {
-      expect(sections.length, "PIS has rendered tables").to.be.greaterThan(0);
+    const xlsxSections = parseXlsxSections(xlsx);
+    expect(
+      xlsxSections.length,
+      "xlsx parsed into at least one section",
+    ).to.be.greaterThan(0);
 
-      sections.forEach(({ el, title }) => {
+    checklistPage.getSectionsWithTables().then((pisSections) => {
+      expect(
+        pisSections.length,
+        "PIS has rendered tables",
+      ).to.be.greaterThan(0);
+
+      pisSections.forEach(({ el, letter, title }) => {
+        // Basic structural sanity — headers + at least one row.
         const headers = checklistPage.scrapeHeaders(el);
         expect(
           headers.length,
@@ -137,136 +217,146 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
         const rows = checklistPage.scrapeRows(el);
         expect(rows.length, `Section '${title}' has rows`).to.be.greaterThan(0);
 
-        rows.forEach((r) => {
-          const hasTitle = r[0] && r[0].trim() !== "";
-          if (!hasTitle) return;
-          const allOtherBlank = r.slice(1).every((c) => c === "");
-          // Allow "Type Here ..." placeholder rows (those scrape as all-blank).
-          if (allOtherBlank) return;
-          const hasAnyValue = r.slice(1).some((c) => c && c.trim() !== "");
-          expect(
-            hasAnyValue,
-            `Row '${r[0]}' in '${title}' has Title but no values`,
-          ).to.be.true;
-        });
+        // Locate the corresponding XLSX section by letter (A, B, C, ...).
+        const xlsxSection = xlsxSections.find((s) => s.letter === letter);
+        if (!xlsxSection) {
+          cy.log(
+            `[xlsx-check] PIS section '${title}' has no matching xlsx section — skipping`,
+          );
+          return;
+        }
+
+        // Normalize XLSX rows based on section layout.
+        const expectedRows =
+          letter === "A"
+            ? flattenSectionAPairs(xlsxSection.rows)
+            : stripIndexCol(xlsxSection.rows.slice(1)); // drop header row
+
+        checklistPage.verifySectionMatchesXlsx(el, expectedRows, title);
       });
+
+      // Project Name + Project Address from xlsx Section A render in a
+      // separate "Project Details" card on the PIS, but the card's text
+      // (Schueco India / Prestige Bellanza / Mulund West) reflects the
+      // creation-time project metadata, not the import file's Project Name *
+      // and Project Address * fields. Cross-validating them produces a false
+      // negative — skip per user direction.
     });
   });
 
-  // ── TC04: PM User Checklist Permissions ─────────────────────────────────
-  // For each table: add a new row with a Title + Value, click outside, verify
-  // it persists. (The row is then deleted in TC07.)
-  it("TC04: PM can add a new row to each checklist table", function () {
+  /* ── TC04-TC07 commented out per user direction ────────────────────────
+   * The add/edit/delete row interactions in cmacs-compact-table are gated
+   * by real OS :hover state that Cypress can't reliably simulate even with
+   * cypress-real-events — verified manually instead. TC05 (non-PM access)
+   * and TC06 (XLSX reupload) are grouped in because they depend on the same
+   * project + session flow and were paused alongside TC04/TC07.
+   *
+   * To re-enable: uncomment the block below.
+
+  it("TC04: PM can add a new row to the first checklist table", function () {
     checklistPage.getSectionsWithTables().then((sections) => {
-      sections.forEach(({ el, letter }) => {
-        const title = `${ADDED_ROW_TITLE}-${letter || "X"}`;
-        const value = `${ADDED_ROW_VALUE}-${letter || "X"}`;
-        checklistPage.addRowToSection(el, title, value);
-        checklistPage.verifyRowSaved(el, title, value);
-      });
+      expect(sections.length, "PIS has at least one section table").to.be.greaterThan(0);
+      const first = sections[0];
+      const title = `${ADDED_ROW_TITLE}-${first.letter || "X"}`;
+      const value = `${ADDED_ROW_VALUE}-${first.letter || "X"}`;
+      checklistPage.addRowToSection(first.el, title, value);
+      checklistPage.verifyRowSaved(first.el, title, value);
     });
   });
 
   // ── TC05: Non-PM User Access Validation ─────────────────────────────────
   it("TC05: Non-PM user has read-only access to the checklist", function () {
-    cy.get("@projectId").then((pid) => {
-      // Hard reset session so the new login takes effect
-      cy.clearCookies();
-      cy.clearLocalStorage();
-      cy.window().then((w) => w.sessionStorage.clear());
-      loginPage.visit();
-      loginPage.login(
-        this.users.importNonPmUser.email,
-        this.users.importNonPmUser.password,
-      );
-      loginPage.closeModalIfPresent();
-      loginPage.closeNotificationIfPresent();
+    const pid = CAPTURED_PROJECT_ID;
+    expect(pid, "Project ID captured from TC01").to.exist;
+    loginPage.visit();
+    loginPage.login(
+      this.users.importNonPmUser.email,
+      this.users.importNonPmUser.password,
+    );
+    loginPage.closeModalIfPresent();
+    loginPage.closeNotificationIfPresent();
 
-      checklistPage.visitChecklistFor(pid);
-      checklistPage.openFirstChecklistInSameTab();
+    checklistPage.visitChecklistFor(pid);
+    checklistPage.openFirstChecklistInSameTab();
 
-      checklistPage.getSectionsWithTables().then((sections) => {
-        if (sections.length === 0) {
-          // Non-PM may see no tables at all — that itself counts as read-only.
-          return;
-        }
-        const first = sections[0];
-        checklistPage.verifyAddRowUnavailable(first.el);
-        checklistPage.verifyDeleteUnavailable(first.el);
-        checklistPage.verifyRowsReadOnly(first.el);
-      });
+    checklistPage.getSectionsWithTables().then((sections) => {
+      if (sections.length === 0) {
+        // Non-PM may see no tables at all — that itself counts as read-only.
+        return;
+      }
+      const first = sections[0];
+      checklistPage.verifyAddRowUnavailable(first.el);
+      checklistPage.verifyDeleteUnavailable(first.el);
+      checklistPage.verifyRowsReadOnly(first.el);
     });
   });
 
   // ── TC06: PDF Reupload Validation ───────────────────────────────────────
   it("TC06: Reuploading an edited XLSX reflects the new value in the checklist", function () {
-    cy.get("@projectId").then((pid) => {
-      // Switch back to PM
-      cy.clearCookies();
-      cy.clearLocalStorage();
-      cy.window().then((w) => w.sessionStorage.clear());
-      loginPage.visit();
-      loginPage.login(
-        this.users.importPmUser.email,
-        this.users.importPmUser.password,
-      );
-      loginPage.closeModalIfPresent();
-      loginPage.closeNotificationIfPresent();
-      projectCreationPage.switchCompany(
-        COMPANY_NAME,
-        this.users.importPmUser.password,
-      );
+    const pid = CAPTURED_PROJECT_ID;
+    expect(pid, "Project ID captured from TC01").to.exist;
+    // Switch back to PM
+    loginPage.visit();
+    loginPage.login(
+      this.users.importPmUser.email,
+      this.users.importPmUser.password,
+    );
+    loginPage.closeModalIfPresent();
+    loginPage.closeNotificationIfPresent();
+    projectCreationPage.switchCompany(
+      COMPANY_NAME,
+      this.users.importPmUser.password,
+    );
 
-      // Edit one cell in the XLSX (creates a .bak so xlsxRestore can revert).
-      cy.task("xlsxEditCell", {
-        path: IMPORT_FILE_PATH,
-        sheet: REUPLOAD_TARGET.sheet,
-        row: REUPLOAD_TARGET.row,
-        col: REUPLOAD_TARGET.col,
-        newValue: REUPLOAD_NEW_VALUE,
-      });
-
-      // Reupload from the Checklist bar
-      checklistPage.visitChecklistFor(pid);
-      checklistPage.reuploadChecklistFile(IMPORT_FILE_PATH);
-      checklistPage.openFirstChecklistInSameTab();
-
-      // Verify the new value appears somewhere in the rendered checklist
-      cy.get("body").should("contain.text", REUPLOAD_NEW_VALUE);
-
-      // Restore the original XLSX so subsequent runs start clean
-      cy.task("xlsxRestore", { path: IMPORT_FILE_PATH });
+    // Edit one cell in the XLSX (creates a .bak so xlsxRestore can revert).
+    cy.task("xlsxEditCell", {
+      path: IMPORT_FILE_PATH,
+      sheet: REUPLOAD_TARGET.sheet,
+      row: REUPLOAD_TARGET.row,
+      col: REUPLOAD_TARGET.col,
+      newValue: REUPLOAD_NEW_VALUE,
     });
+
+    // Reupload from the Checklist bar
+    checklistPage.visitChecklistFor(pid);
+    checklistPage.reuploadChecklistFile(IMPORT_FILE_PATH);
+    checklistPage.openFirstChecklistInSameTab();
+
+    // Verify the new value appears somewhere in the rendered checklist
+    cy.get("body").should("contain.text", REUPLOAD_NEW_VALUE);
+
+    // Restore the original XLSX so subsequent runs start clean
+    cy.task("xlsxRestore", { path: IMPORT_FILE_PATH });
   });
 
   // ── TC07: Cleanup the added checklist rows ──────────────────────────────
-  it("TC07: PM can delete the previously-added checklist rows", function () {
-    cy.get("@projectId").then((pid) => {
-      checklistPage.visitChecklistFor(pid);
-      checklistPage.openFirstChecklistInSameTab();
-
-      checklistPage.getSectionsWithTables().then((sections) => {
-        sections.forEach(({ el, letter }) => {
-          const title = `${ADDED_ROW_TITLE}-${letter || "X"}`;
-          // Only attempt deletion if the row still exists (TC06 reupload may
-          // have wiped it — that's acceptable, just skip).
-          const rows = checklistPage.scrapeRows(el);
-          const exists = rows.some(
-            (r) => r[0] && r[0].toLowerCase().includes(title.toLowerCase()),
-          );
-          if (!exists) return;
-          checklistPage.deleteRowByTitle(el, title);
-          // Verify removal
-          const after = checklistPage.scrapeRows(el);
-          const still = after.some(
-            (r) => r[0] && r[0].toLowerCase().includes(title.toLowerCase()),
-          );
-          expect(still, `Row '${title}' should be removed after delete`).to.be
-            .false;
-        });
-      });
+  it("TC07: PM can delete the previously-added checklist row", function () {
+    // TC06 ended on the PIS (it called openFirstChecklistInSameTab after the
+    // reupload). Continue from there — no re-navigation needed. TC04 added a
+    // row to the FIRST section only, so we only need to delete it there.
+    checklistPage.getSectionsWithTables().then((sections) => {
+      expect(sections.length, "PIS has at least one section table").to.be.greaterThan(0);
+      const first = sections[0];
+      const title = `${ADDED_ROW_TITLE}-${first.letter || "X"}`;
+      // TC06's reupload may have wiped the row — that's acceptable, just skip.
+      const rows = checklistPage.scrapeRows(first.el);
+      const exists = rows.some(
+        (r) => r[0] && r[0].toLowerCase().includes(title.toLowerCase()),
+      );
+      if (!exists) {
+        cy.log(`Row '${title}' not present — TC06 reupload likely wiped it. Skipping delete.`);
+        return;
+      }
+      checklistPage.deleteRowByTitle(first.el, title);
+      const after = checklistPage.scrapeRows(first.el);
+      const still = after.some(
+        (r) => r[0] && r[0].toLowerCase().includes(title.toLowerCase()),
+      );
+      expect(still, `Row '${title}' should be removed after delete`).to.be.false;
     });
   });
+
+  ── end TC04-TC07 commented block ──────────────────────────────────── */
 
   // ── TC08: Project Deletion ──────────────────────────────────────────────
   it("TC08: Delete the project and verify it's removed from the list", function () {

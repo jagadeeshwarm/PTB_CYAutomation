@@ -77,6 +77,8 @@ export const PROJECT_CREATION = {
     "teams-panel div cmacs-search > cmacs-select > div.ant-select-selection",
   teamsDropdownList:
     "teams-panel div cmacs-search > cmacs-select > div.ant-select-dropdown",
+  teamsSearchInput:
+    "teams-panel .cmacs-search > .ant-select-selection > .ant-select-selection__rendered input",
 
   // Footer buttons
   nextButton: "cmacs-modal .creation-footer button.ant-btn-primary",

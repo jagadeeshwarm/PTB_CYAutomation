@@ -4,12 +4,13 @@ export const DASHBOARD = {
   projectCards: "project-card cmacs-card .ant-card-body",
   projectListHeader: "project-bar",
   workspaceSelector: ".workspace-main-nav.project-workspace > div",
-  searchIcon:
-    "body > app-root > div > div > app-main-layout > div.ng-star-inserted > div > app-nav-layout > div > div.ant-row.secondary-menu-area > div > div > a.nav-search-icon.ng-star-inserted > span > i",
-  searchInput:
-    "body > app-root > div > div > app-main-layout > div.ng-star-inserted > div > app-nav-layout > div > div.ant-row.secondary-menu-area > div > div > nz-input-group input",
+  // Search controls live in the secondary top-bar. Use short class-based
+  // selectors scoped to .secondary-menu-area so we don't break every time
+  // the surrounding flex/grid nesting changes.
+  searchIcon: ".secondary-menu-area a.nav-search-icon",
+  searchInput: ".secondary-menu-area nz-input-group input",
   activeSearchIcon:
-    "body > app-root > div > div > app-main-layout > div.ng-star-inserted > div > app-nav-layout > div > div.ant-row.secondary-menu-area > div > div > nz-input-group > span.ant-input-suffix.ng-star-inserted > i.iconUILarge-Search.close-search-icon.ng-star-inserted.active-search",
+    ".secondary-menu-area i.iconUILarge-Search.active-search, .secondary-menu-area i.iconUILarge-Search.close-search-icon",
   searchedProjectCard: "project-card",
   searchedProjectCardBody: "cmacs-card .ant-card-body",
 };

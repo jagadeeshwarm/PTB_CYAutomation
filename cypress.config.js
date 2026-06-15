@@ -13,8 +13,8 @@ module.exports = defineConfig({
   },
   e2e: {
     baseUrl: 'https://staging.plantobuild.online',
-    viewportWidth: 1280,
-    viewportHeight: 720,
+    viewportWidth: 1920,
+    viewportHeight: 1080,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 30000,
     testIsolation: false,
