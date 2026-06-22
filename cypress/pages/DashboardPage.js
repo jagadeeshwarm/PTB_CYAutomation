@@ -68,10 +68,29 @@ class DashboardPage {
     cy.wait(2000);
   }
 
+  /**
+   * Switch to the "All" projects tab if the tab strip is present. Search results
+   * only render under the active tab, and the default ("Recently Opened") may
+   * not contain the target project — so "All" is required to find it.
+   */
+  selectAllProjectsTabIfPresent() {
+    cy.get("body").then(($body) => {
+      const $all = [
+        ...$body.find(`${DASHBOARD.projectTabBtn}:visible`),
+      ].find((el) => el.textContent.trim() === "All");
+      if ($all) {
+        cy.wrap($all).click();
+        cy.wait(1500);
+      }
+    });
+  }
+
   openProjectBySearch(projectName) {
     this.waitForPageLoad();
     this.closeFavoritesIfPresent();
     this.searchProject(projectName);
+    // New dashboard: results are tab-scoped; "All" surfaces every match.
+    this.selectAllProjectsTabIfPresent();
     this.openSearchedProject(projectName);
   }
 

@@ -13,4 +13,7 @@ export const DASHBOARD = {
     ".secondary-menu-area i.iconUILarge-Search.active-search, .secondary-menu-area i.iconUILarge-Search.close-search-icon",
   searchedProjectCard: "project-card",
   searchedProjectCardBody: "cmacs-card .ant-card-body",
+  // Project list tab strip (Recently Opened / Recently Created / Favorite / All).
+  // Search results only show under the active tab, so we switch to "All".
+  projectTabBtn: ".ant-tabs-tab-btn",
 };

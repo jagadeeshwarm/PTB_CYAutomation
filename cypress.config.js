@@ -20,6 +20,9 @@ module.exports = defineConfig({
     testIsolation: false,
     video: false,
     screenshotOnRunFailure: true,
+    // The EMS drawing viewer (embedpdf/pdfium) renders inside a shadow root,
+    // so let selectors pierce shadow DOM (e.g. the drawing <canvas>).
+    includeShadowDom: true,
     setupNodeEvents(on, config) {
       require('cypress-mochawesome-reporter/plugin')(on);
       const {
