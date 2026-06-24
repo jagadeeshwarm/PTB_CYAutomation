@@ -39,6 +39,17 @@ class DashboardPage {
     });
   }
 
+  // Default landing tab after login is "Recently Opened". Switch to "All"
+  // so search covers every project in the company.
+  selectAllProjectsTab() {
+    cy.get("body").then(($body) => {
+      if ($body.find(DASHBOARD.projectsAllTab).length > 0) {
+        cy.get(DASHBOARD.projectsAllTab).first().click();
+        cy.wait(1000);
+      }
+    });
+  }
+
   searchProject(projectName) {
     cy.get(DASHBOARD.searchIcon).click();
     cy.wait(500);
@@ -88,6 +99,7 @@ class DashboardPage {
   openProjectBySearch(projectName) {
     this.waitForPageLoad();
     this.closeFavoritesIfPresent();
+    this.selectAllProjectsTab();
     this.searchProject(projectName);
     // New dashboard: results are tab-scoped; "All" surfaces every match.
     this.selectAllProjectsTabIfPresent();
