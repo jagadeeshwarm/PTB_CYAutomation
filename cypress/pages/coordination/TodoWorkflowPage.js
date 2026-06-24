@@ -36,7 +36,11 @@ class TodoWorkflowPage {
       .filter(":visible")
       .first()
       .click({ force: true });
-    cy.get(TODO_WORKFLOW.modal, { timeout: 10000 }).should("be.visible");
+    // AntD leaves prior modal wrappers in the DOM with visibility:hidden, so
+    // scope the visibility check to the wrapper that's actually showing.
+    cy.get(TODO_WORKFLOW.modal, { timeout: 10000 })
+      .filter(":visible")
+      .should("have.length.greaterThan", 0);
     cy.wait(1000);
   }
 

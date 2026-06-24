@@ -14,8 +14,10 @@ export const RESOURCE_ASSIGN = {
 };
 
 export const TIMESHEET = {
-  // Side panel Timesheet tab icon
-  tabIcon: ".iconUILarge-Time",
+  // Side panel Timesheet tab icon. Scoped to app-pss-prop-side-panel because
+  // .iconUILarge-Time also renders elsewhere on the page (toolbar / other
+  // widgets) and an unscoped match returns 2 elements, which breaks .click().
+  tabIcon: "app-pss-prop-side-panel .iconUILarge-Time",
 
   // Timesheet panel (inside side panel)
   component: "app-timesheet-side-panel",

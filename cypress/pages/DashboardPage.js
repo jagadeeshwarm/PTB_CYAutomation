@@ -40,11 +40,15 @@ class DashboardPage {
   }
 
   // Default landing tab after login is "Recently Opened". Switch to "All"
-  // so search covers every project in the company.
+  // so search covers every project in the company. Match by tab text rather
+  // than nth-child so DOM reordering doesn't break us.
   selectAllProjectsTab() {
     cy.get("body").then(($body) => {
-      if ($body.find(DASHBOARD.projectsAllTab).length > 0) {
-        cy.get(DASHBOARD.projectsAllTab).first().click();
+      const $all = [
+        ...$body.find(`${DASHBOARD.projectTabBtn}:visible`),
+      ].find((el) => el.textContent.trim() === "All");
+      if ($all) {
+        cy.wrap($all).click();
         cy.wait(1000);
       }
     });
@@ -79,30 +83,11 @@ class DashboardPage {
     cy.wait(2000);
   }
 
-  /**
-   * Switch to the "All" projects tab if the tab strip is present. Search results
-   * only render under the active tab, and the default ("Recently Opened") may
-   * not contain the target project — so "All" is required to find it.
-   */
-  selectAllProjectsTabIfPresent() {
-    cy.get("body").then(($body) => {
-      const $all = [
-        ...$body.find(`${DASHBOARD.projectTabBtn}:visible`),
-      ].find((el) => el.textContent.trim() === "All");
-      if ($all) {
-        cy.wrap($all).click();
-        cy.wait(1500);
-      }
-    });
-  }
-
   openProjectBySearch(projectName) {
     this.waitForPageLoad();
     this.closeFavoritesIfPresent();
     this.selectAllProjectsTab();
     this.searchProject(projectName);
-    // New dashboard: results are tab-scoped; "All" surfaces every match.
-    this.selectAllProjectsTabIfPresent();
     this.openSearchedProject(projectName);
   }
 

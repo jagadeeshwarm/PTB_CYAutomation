@@ -99,6 +99,14 @@ describe("Manual Project Creation - Advanced Settings", () => {
 
   it("Step 16: Review and Create Project", () => {
     projectCreationPage.clickCreate();
-    dashboardPage.waitForPageLoad();
+    // After create, the app redirects to /app/project/portal/<projectId>.
+    // Wait for that URL pattern instead of dashboardPage.waitForPageLoad()
+    // — the latter waits for `project-bar` which only renders on the
+    // project list page, not the portal landing.
+    cy.url({ timeout: 20000 }).should(
+      "match",
+      /\/app\/project\/portal\/[0-9a-f-]{8,}/i,
+    );
+    cy.wait(2000);
   });
 });

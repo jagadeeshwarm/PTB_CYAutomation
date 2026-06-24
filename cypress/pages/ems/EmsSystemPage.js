@@ -202,7 +202,11 @@ class EmsSystemPage {
       .first()
       .scrollIntoView()
       .dblclick({ force: true });
-    cy.get(EMS_SYSTEM.articleModal, { timeout: 10000 }).should("be.visible");
+    // AntD leaves prior modal wrappers in the DOM with visibility:hidden, so
+    // scope the visibility check to the wrapper that's actually showing.
+    cy.get(EMS_SYSTEM.articleModal, { timeout: 10000 })
+      .filter(":visible")
+      .should("have.length.greaterThan", 0);
     cy.wait(1200);
   }
 
@@ -340,9 +344,11 @@ class EmsSystemPage {
       .contains(EMS_SYSTEM.addElementsText)
       .scrollIntoView()
       .click({ force: true });
-    cy.get(EMS_SYSTEM.createElementsModal, { timeout: 10000 }).should(
-      "be.visible"
-    );
+    // AntD leaves prior modal wrappers in the DOM with visibility:hidden, so
+    // scope the visibility check to the wrapper that's actually showing.
+    cy.get(EMS_SYSTEM.createElementsModal, { timeout: 10000 })
+      .filter(":visible")
+      .should("have.length.greaterThan", 0);
     cy.wait(1200);
   }
 

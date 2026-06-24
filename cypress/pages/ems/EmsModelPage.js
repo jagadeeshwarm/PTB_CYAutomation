@@ -400,7 +400,11 @@ class EmsModelPage {
 
   clickAddToDo() {
     this.clickPanelLink(EMS_MODEL.activeTabPane, EMS_MODEL.addToDoText);
-    cy.get(TODO_WORKFLOW.modal, { timeout: 10000 }).should("be.visible");
+    // AntD leaves prior modal wrappers in the DOM with visibility:hidden, so
+    // scope the visibility check to the wrapper that's actually showing.
+    cy.get(TODO_WORKFLOW.modal, { timeout: 10000 })
+      .filter(":visible")
+      .should("have.length.greaterThan", 0);
     cy.wait(1000);
   }
 
@@ -590,7 +594,11 @@ class EmsModelPage {
 
   clickCreateNewTicket() {
     this.clickPanelLink(EMS_MODEL.ticketPanel, EMS_MODEL.createTicketText);
-    cy.get(EMS_MODEL.ticketModal, { timeout: 10000 }).should("be.visible");
+    // AntD leaves prior modal wrappers in the DOM with visibility:hidden, so
+    // scope the visibility check to the wrapper that's actually showing.
+    cy.get(EMS_MODEL.ticketModal, { timeout: 10000 })
+      .filter(":visible")
+      .should("have.length.greaterThan", 0);
     cy.wait(1500);
   }
 

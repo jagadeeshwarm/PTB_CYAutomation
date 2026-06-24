@@ -43,11 +43,12 @@ export const CHECKLIST = {
   reuploadFileInput: "app-checklist-bar input[type='file']",
 
   // === Project Info Sheet (PIS) — rendered after double-clicking the row ===
-  // Top-level company / project address blocks (rendered as open-text widgets)
-  companyAddressText:
-    "app-form-company-address app-form-open-text h3 span, app-form-company-address app-form-open-text h3",
-  projectAddressText:
-    "app-form-project-address app-form-open-text h3 span, app-form-project-address app-form-open-text h3",
+  // Top-level company / project address blocks. Each widget wraps its address
+  // text in an h3 (with an inner span carrying the styled color). We anchor on
+  // the Angular component tag so the selector survives any project-specific
+  // dynamic ids upstream in the tree.
+  companyAddressText: "app-form-company-address h3",
+  projectAddressText: "app-form-project-address h3",
 
   // Every section header (A | PROJECT OVERVIEW, B | PROJECT SCOPE, etc.)
   // Their text lives in the section's title span.

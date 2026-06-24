@@ -12,12 +12,22 @@ const PERMISSIONS_TAB_ID = "#ec9eb74f-25e1-11eb-a808-062b5ca8a154";
 // ── Teams panel ────────────────────────────────────────────────────────────
 const NEW_TEAM_BUTTON =
   "team-bar div.button-bar button.indexnewbtn.ant-btn-primary";
-const TEAM_NAME_INPUT = "team-bar input";
-const TEAMS_LEFT_PANEL_ITEM = ".menu-container ul.company-menu li.tree-item";
-const CONTACTS_SEARCH_INPUT =
-  "app-teams-root cmacs-search input, app-teams-root input[type='text']";
-const CONTACTS_LIST_ITEM = "app-teams-root cdk-virtual-scroll-viewport li, app-teams-root .contact-card";
-const TEAM_MEMBERS_DROPZONE = "team-bar + div, app-teams-root .members-list";
+// The new team's name input renders in the freshly-created column card (top
+// right after clicking "New"), not inside team-bar. Anchor on the visible
+// placeholder text, falling back to the focused input inside app-teams-root.
+const TEAM_NAME_INPUT =
+  'input[placeholder="New Team"], app-teams-root input:focus';
+// Teams now render as horizontal "board-column" cards. Each column header
+// holds the team name in span.column-title. Used both for existence checks
+// (Step 1) and for clicking a specific team by name (Step 2).
+const TEAMS_LEFT_PANEL_ITEM = ".board-column .column-title";
+// Contacts column (the only board-column with .fixed-line). Each contact
+// card is a .cdk-drag.task wrapper containing a member-card with the name
+// in .subcontent — so cy.contains can match the wrapper by name text.
+const CONTACTS_LIST_ITEM = ".board-column.fixed-line .cdk-drag.task";
+// Each team column has its own #tasks-container drop zone. We pick the
+// container belonging to the team whose .column-title matches TEAM_NAME
+// — the lookup is done inline in Step 2 since it depends on team name.
 const TEAM_OPTIONS_MENU = ".menu-container ul.company-menu li.ant-menu-item-selected .iconUILarge-Three-Dots, .menu-container li.ant-menu-item-selected i[class*='Three-Dots']";
 const TEAM_DELETE_OPTION = `${COMMON.overlayContainer} li:contains('Delete')`;
 
@@ -28,8 +38,10 @@ const DOCUMENTS_TABLE =
   "app-permission-root cmacs-tabset div.ant-tabs-tabpane-active app-document-permission";
 const DOCUMENT_ROW =
   "app-document-permission tbody tr.ant-table-row";
-const PERMISSION_CELL =
-  "td.cmacs-editable-column.cmacs-compact-table-cell-groupPermissionCode > div > div";
+// The permission cell's inline-select wrapper — clicking it opens the
+// access-type dropdown overlay. The old path-based selector no longer
+// matches because the cell's inner structure changed.
+const PERMISSION_CELL = ".cmacs-compact-table-select";
 const PERMISSION_DROPDOWN_ITEM = `${COMMON.overlayContainer} li:visible`;
 
 // Schedule tab in permissions
@@ -44,7 +56,7 @@ const SCHEDULE_TASK_PERMISSION_CELL =
 
 // ── Test data ──────────────────────────────────────────────────────────────
 const TEAM_NAME = "MJ";
-const TEAM_MEMBERS = ["MJ", "Michael J"];
+const TEAM_MEMBERS = ["User MJ", "Michael J"];
 const PROJECT_NAME = "Automation Project 3";
 
 const SCHEDULE_NAME = `Permission_Schedule_${Date.now()}`;
@@ -76,7 +88,7 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
 
   it("Step 1: Navigate to Teams and create a new team named MJ", () => {
     cy.get(TEAMS_TAB_ID).click();
-    cy.wait(2000);
+    cy.wait(5000);
     cy.get(NEW_TEAM_BUTTON).click();
     cy.wait(1500);
     cy.get(TEAM_NAME_INPUT).last().clear().type(`${TEAM_NAME}{enter}`);
@@ -86,48 +98,38 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
 
   // ── Step 2: Drag/drop members from Contacts into the new team ────────────
 
-  it("Step 2: Search and add MJ and Michael J to the team", () => {
+  it("Step 2: Search and add User MJ and Michael J to the team", () => {
     cy.get(TEAMS_LEFT_PANEL_ITEM).contains(TEAM_NAME).click();
     cy.wait(1000);
 
     TEAM_MEMBERS.forEach((memberName) => {
-      cy.get("body").then(($body) => {
-        const $search = $body.find(CONTACTS_SEARCH_INPUT).filter(":visible");
-        if ($search.length > 0) {
-          cy.wrap($search.first()).clear().type(memberName);
-          cy.wait(800);
-        }
-      });
+      // Scope the drop zone to the target team's column — every team column
+      // has its own #tasks-container, so an unscoped lookup would land on
+      // Contacts' container (the first one in the DOM).
+      cy.contains(".board-column .column-title", TEAM_NAME)
+        .closest(".board-column")
+        .find("#tasks-container")
+        .then(($target) => {
+          const tgtRect = $target[0].getBoundingClientRect();
+          const tgtX = Math.floor(tgtRect.left + tgtRect.width / 2);
+          const tgtY = Math.floor(tgtRect.top + tgtRect.height / 2);
 
-      cy.contains(CONTACTS_LIST_ITEM, memberName, { matchCase: false })
-        .first()
-        .then(($source) => {
-          cy.get(TEAM_MEMBERS_DROPZONE).first().then(($target) => {
-            const sourceRect = $source[0].getBoundingClientRect();
-            const targetRect = $target[0].getBoundingClientRect();
+          // Angular CDK drag-and-drop ignores synthetic mouse/drag events
+          // (Cypress .trigger()). cypress-real-events dispatches actual OS
+          // mouse events through Chrome's DevTools Protocol, which CDK
+          // handles like a real user.
+          cy.contains(CONTACTS_LIST_ITEM, memberName, { matchCase: false })
+            .first()
+            .scrollIntoView()
+            .realMouseDown({ position: "center", button: "left" });
 
-            cy.wrap($source)
-              .trigger("mousedown", { which: 1, force: true })
-              .trigger("dragstart", { force: true })
-              .trigger("drag", { force: true });
-
-            cy.wrap($target)
-              .trigger("dragenter", { force: true })
-              .trigger("dragover", {
-                clientX: targetRect.left + 20,
-                clientY: targetRect.top + 20,
-                force: true,
-              })
-              .trigger("drop", {
-                clientX: targetRect.left + 20,
-                clientY: targetRect.top + 20,
-                force: true,
-              });
-
-            cy.wrap($source).trigger("dragend", { force: true });
-          });
+          // Move past CDK's drag-start threshold (5px default), then over
+          // the target column, then release to commit the drop.
+          cy.get("body").realMouseMove(tgtX - 100, tgtY - 100);
+          cy.get("body").realMouseMove(tgtX, tgtY);
+          cy.get("body").realMouseUp({ x: tgtX, y: tgtY });
         });
-      cy.wait(1000);
+      cy.wait(1500);
     });
   });
 
@@ -155,14 +157,21 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
     cy.get(PERMISSIONS_TEAMS_PANEL_ITEM).contains(TEAM_NAME).click();
     cy.wait(1500);
 
-    // First document → Read Only
-    cy.get(DOCUMENT_ROW).eq(0).find(PERMISSION_CELL).click({ force: true });
+    // First document → Read Only. Click the row to focus it, then
+    // double-click the inline cell to open the access-type overlay
+    // (single-click only arms the dropdown UI; it needs a dblclick to
+    // actually open the options).
+    cy.get(DOCUMENT_ROW).eq(0).click({ force: true });
+    cy.wait(400);
+    cy.get(DOCUMENT_ROW).eq(0).find(PERMISSION_CELL).dblclick({ force: true });
     cy.wait(800);
     cy.get(PERMISSION_DROPDOWN_ITEM).contains(/read\s*only/i).click();
     cy.wait(1000);
 
     // Second document → Full Access
-    cy.get(DOCUMENT_ROW).eq(1).find(PERMISSION_CELL).click({ force: true });
+    cy.get(DOCUMENT_ROW).eq(1).click({ force: true });
+    cy.wait(400);
+    cy.get(DOCUMENT_ROW).eq(1).find(PERMISSION_CELL).dblclick({ force: true });
     cy.wait(800);
     cy.get(PERMISSION_DROPDOWN_ITEM).contains(/full\s*access/i).click();
     cy.wait(1000);

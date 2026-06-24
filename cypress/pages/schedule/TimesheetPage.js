@@ -27,7 +27,7 @@ class TimesheetPage {
   openResourceUsage() {
     sidePanelPage.close();
     cy.get(RESOURCE_USAGE.resourceIcon).closest("button").click();
-    cy.wait(500);
+    cy.wait(5000);
     cy.contains(RESOURCE_USAGE.menuItems, "Resource Usage").click();
     cy.wait(1000);
   }
