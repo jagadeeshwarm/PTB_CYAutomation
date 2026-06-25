@@ -12,36 +12,20 @@ const PERMISSIONS_TAB_ID = "#ec9eb74f-25e1-11eb-a808-062b5ca8a154";
 // ── Teams panel ────────────────────────────────────────────────────────────
 const NEW_TEAM_BUTTON =
   "team-bar div.button-bar button.indexnewbtn.ant-btn-primary";
-// The new team's name input renders in the freshly-created column card (top
-// right after clicking "New"), not inside team-bar. Anchor on the visible
-// placeholder text, falling back to the focused input inside app-teams-root.
 const TEAM_NAME_INPUT =
   'input[placeholder="New Team"], app-teams-root input:focus';
-// Teams now render as horizontal "board-column" cards. Each column header
-// holds the team name in span.column-title. Used both for existence checks
-// (Step 1) and for clicking a specific team by name (Step 2).
 const TEAMS_LEFT_PANEL_ITEM = ".board-column .column-title";
-// Contacts column (the only board-column with .fixed-line). Each contact
-// card is a .cdk-drag.task wrapper containing a member-card with the name
-// in .subcontent — so cy.contains can match the wrapper by name text.
 const CONTACTS_LIST_ITEM = ".board-column.fixed-line .cdk-drag.task";
-// Each team column has its own #tasks-container drop zone. We pick the
-// container belonging to the team whose .column-title matches TEAM_NAME
-// — the lookup is done inline in Step 2 since it depends on team name.
-const TEAM_OPTIONS_MENU = ".menu-container ul.company-menu li.ant-menu-item-selected .iconUILarge-Three-Dots, .menu-container li.ant-menu-item-selected i[class*='Three-Dots']";
-const TEAM_DELETE_OPTION = `${COMMON.overlayContainer} li:contains('Delete')`;
 
 // ── Permissions module ─────────────────────────────────────────────────────
 const PERMISSIONS_TEAMS_PANEL_ITEM =
   ".menu-container ul.company-menu li.tree-item";
-const DOCUMENTS_TABLE =
-  "app-permission-root cmacs-tabset div.ant-tabs-tabpane-active app-document-permission";
-const DOCUMENT_ROW =
-  "app-document-permission tbody tr.ant-table-row";
-// The permission cell's inline-select wrapper — clicking it opens the
-// access-type dropdown overlay. The old path-based selector no longer
-// matches because the cell's inner structure changed.
-const PERMISSION_CELL = ".cmacs-compact-table-select";
+const DOCUMENT_ROW = "app-document-permission tbody tr.ant-table-row";
+// The td itself — its inner DOM swaps shape on first click (resting → ant-
+// select), so we click by coordinates (realClick) on the stable td and let
+// real OS events hit whatever element is rendered there.
+const DOCUMENT_PERMISSION_CELL =
+  "td.cmacs-editable-column.cmacs-compact-table-cell-groupPermissionCode";
 const PERMISSION_DROPDOWN_ITEM = `${COMMON.overlayContainer} li:visible`;
 
 // Schedule tab in permissions
@@ -52,7 +36,19 @@ const SCHEDULE_PERMISSION_DROPDOWN =
 const SCHEDULE_TASK_ROW =
   "app-permission-root cmacs-compact-table.permsch tbody tr.ant-table-row";
 const SCHEDULE_TASK_PERMISSION_CELL =
-  "td.cmacs-editable-column.cmacs-compact-table-cell-permission > div > div";
+  "td.cmacs-editable-column.cmacs-compact-table-cell-permission";
+
+// Rename button in the Coordination Files toolbar — the 6th button in
+// the floatright action row. There's no text/title we can match on, so
+// nth-child is the only stable hook.
+const COORDINATION_RENAME_BUTTON =
+  "app-document-view-toolbar div.ant-row.actionbuttons.floatright > button:nth-child(6)";
+// Rename modal — `cmacs-modal` wraps the cdk-overlay; the input and the
+// primary "Save" button live in the modal body/footer respectively.
+const COORDINATION_RENAME_MODAL_INPUT =
+  "cmacs-modal div.ant-modal-body.trans-model-body input";
+const COORDINATION_RENAME_MODAL_SAVE =
+  "cmacs-modal div.ant-modal-footer.trans-model-footer button.ant-btn-primary";
 
 // ── Test data ──────────────────────────────────────────────────────────────
 const TEAM_NAME = "MJ";
@@ -60,7 +56,8 @@ const TEAM_MEMBERS = ["User MJ", "Michael J"];
 const PROJECT_NAME = "Automation Project 3";
 
 const SCHEDULE_NAME = `Permission_Schedule_${Date.now()}`;
-const RENAMED_TASK_2 = `Renamed_Task_2_${Date.now()}`;
+const TASK_2_PERCENT = 55;
+const RENAMED_FOLDER_2 = `perm-folder-2-renamed-${Date.now()}`;
 
 const FOLDER_1_FILES = [
   {
@@ -75,10 +72,53 @@ const FOLDER_2_FILES = [
   },
 ];
 
+// Open the permission dropdown for a given row by clicking the cell
+// until the overlay menu appears. The cell needs 1 click when it's
+// already "armed" (inline ant-select from a previous interaction) or 2
+// clicks when it's in resting display state — blindly clicking twice
+// is what made the flow flaky, because the second click TOGGLES the
+// dropdown closed when the first click already opened it. Polling for
+// the overlay between clicks converges in either state.
+function openPermissionDropdown(rowSelector, rowIndex, cellSelector, attempt = 1) {
+  const MAX_ATTEMPTS = 4;
+  cy.get(rowSelector)
+    .eq(rowIndex)
+    .find(cellSelector)
+    .scrollIntoView()
+    .realClick({ position: "center" });
+  cy.wait(700);
+  cy.get("body").then(($body) => {
+    const dropdownOpen =
+      $body.find(`${COMMON.overlayContainer} li:visible`).length > 0;
+    if (dropdownOpen) return;
+    if (attempt >= MAX_ATTEMPTS) {
+      throw new Error(
+        `Permission dropdown failed to open after ${MAX_ATTEMPTS} clicks on row ${rowIndex}`,
+      );
+    }
+    openPermissionDropdown(rowSelector, rowIndex, cellSelector, attempt + 1);
+  });
+}
+
+// Pick the row's access type. The 3-second tail wait lets the inline
+// save loader finish before the caller moves on to the next row.
+function setRowPermission(rowSelector, rowIndex, cellSelector, accessLabelRegex) {
+  openPermissionDropdown(rowSelector, rowIndex, cellSelector);
+  cy.get(PERMISSION_DROPDOWN_ITEM)
+    .contains(accessLabelRegex)
+    .click({ force: true });
+  cy.wait(3000);
+}
+
 describe("Project-Level Teams & Permissions (MJ)", () => {
-  before(function () {
-    cy.fixture("users").then((users) => {
-      this.users = users;
+  // Closure cache so every `it` can read the fixture without relying on
+  // Mocha's `this` context (which is unreliable in Cypress and was the
+  // cause of the previous `Cannot read properties of undefined` failure).
+  let users;
+
+  before(() => {
+    cy.fixture("users").then((fixture) => {
+      users = fixture;
       loginAsAdmin(users);
       dashboardPage.openProjectBySearch(PROJECT_NAME);
     });
@@ -103,9 +143,6 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
     cy.wait(1000);
 
     TEAM_MEMBERS.forEach((memberName) => {
-      // Scope the drop zone to the target team's column — every team column
-      // has its own #tasks-container, so an unscoped lookup would land on
-      // Contacts' container (the first one in the DOM).
       cy.contains(".board-column .column-title", TEAM_NAME)
         .closest(".board-column")
         .find("#tasks-container")
@@ -114,17 +151,13 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
           const tgtX = Math.floor(tgtRect.left + tgtRect.width / 2);
           const tgtY = Math.floor(tgtRect.top + tgtRect.height / 2);
 
-          // Angular CDK drag-and-drop ignores synthetic mouse/drag events
-          // (Cypress .trigger()). cypress-real-events dispatches actual OS
-          // mouse events through Chrome's DevTools Protocol, which CDK
-          // handles like a real user.
+          // Angular CDK drag-and-drop ignores synthetic events; real OS
+          // mouse events via cypress-real-events behave like a real user.
           cy.contains(CONTACTS_LIST_ITEM, memberName, { matchCase: false })
             .first()
             .scrollIntoView()
             .realMouseDown({ position: "center", button: "left" });
 
-          // Move past CDK's drag-start threshold (5px default), then over
-          // the target column, then release to commit the drop.
           cy.get("body").realMouseMove(tgtX - 100, tgtY - 100);
           cy.get("body").realMouseMove(tgtX, tgtY);
           cy.get("body").realMouseUp({ x: tgtX, y: tgtY });
@@ -153,95 +186,41 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
     cy.get(PERMISSIONS_TAB_ID).click();
     cy.wait(2500);
 
-    // Select MJ team in the left panel
     cy.get(PERMISSIONS_TEAMS_PANEL_ITEM).contains(TEAM_NAME).click();
     cy.wait(1500);
 
-    // First document → Read Only. Click the row to focus it, then
-    // double-click the inline cell to open the access-type overlay
-    // (single-click only arms the dropdown UI; it needs a dblclick to
-    // actually open the options).
-    cy.get(DOCUMENT_ROW).eq(0).click({ force: true });
-    cy.wait(400);
-    cy.get(DOCUMENT_ROW).eq(0).find(PERMISSION_CELL).dblclick({ force: true });
-    cy.wait(800);
-    cy.get(PERMISSION_DROPDOWN_ITEM).contains(/read\s*only/i).click();
-    cy.wait(1000);
-
+    // First document → Read Only
+    setRowPermission(DOCUMENT_ROW, 0, DOCUMENT_PERMISSION_CELL, /read\s*only/i);
     // Second document → Full Access
-    cy.get(DOCUMENT_ROW).eq(1).click({ force: true });
-    cy.wait(400);
-    cy.get(DOCUMENT_ROW).eq(1).find(PERMISSION_CELL).dblclick({ force: true });
-    cy.wait(800);
-    cy.get(PERMISSION_DROPDOWN_ITEM).contains(/full\s*access/i).click();
-    cy.wait(1000);
+    setRowPermission(DOCUMENT_ROW, 1, DOCUMENT_PERMISSION_CELL, /full\s*access/i);
   });
 
-  // ── Step 5: Login as MJ user and verify document access ──────────────────
+  // ── Step 5: Create a schedule with 2 tasks (still logged in as admin) ────
 
-  it("Step 5: Login as MJ user and verify file permissions", function () {
-    logoutCurrentUser();
-    loginPage.login(this.users.nonPmUser.email, this.users.nonPmUser.password);
-    loginPage.closeModalIfPresent();
-    loginPage.closeNotificationIfPresent();
-    dashboardPage.openProjectBySearch(PROJECT_NAME);
-    dashboardPage.selectWorkspaceByName("Coordination");
-    cy.wait(2000);
-
-    // Verify both items are visible
-    coordinationFilesPage.verifyFolderExists("perm-folder-1");
-    coordinationFilesPage.verifyFolderExists("perm-folder-2");
-
-    // First item — Read Only: rename should be disabled
-    coordinationFilesPage.selectFolderByName("perm-folder-1");
-    cy.wait(500);
-    cy.get("app-document-view-toolbar")
-      .find("button")
-      .filter(":contains('Rename'), [title*='Rename'], .iconUILarge-Edit")
-      .first()
-      .should("be.disabled");
-
-    // Second item — Full Access: rename should be enabled
-    coordinationFilesPage.selectFolderByName("perm-folder-2");
-    cy.wait(500);
-    cy.get("app-document-view-toolbar")
-      .find("button")
-      .filter(":contains('Rename'), [title*='Rename'], .iconUILarge-Edit")
-      .first()
-      .should("not.be.disabled");
-  });
-
-  // ── Step 6: Login back as admin and create a schedule with 2 tasks ───────
-
-  it("Step 6: Login back as admin and create a schedule with 2 tasks", function () {
-    logoutCurrentUser();
-    loginAsAdmin(this.users);
-    dashboardPage.openProjectBySearch(PROJECT_NAME);
+  it("Step 5: Navigate to Schedule and create a schedule with 2 tasks", () => {
     dashboardPage.selectWorkspaceByName("Schedule");
     cy.wait(2000);
 
     schedulePage.createSchedule(SCHEDULE_NAME);
     cy.contains(SCHEDULE_NAME).should("be.visible");
 
-    // Add 2 tasks
     taskCreationPage.createTask();
     taskCreationPage.verifyTaskExists("New Task");
     taskCreationPage.addBelowViaContextMenu("New Task");
     taskCreationPage.getTaskCount().should("have.length.greaterThan", 1);
   });
 
-  // ── Step 7: Schedule permissions for the MJ team ─────────────────────────
+  // ── Step 6: Set schedule task permissions for the MJ team ────────────────
 
-  it("Step 7: Set schedule task permissions for MJ team", () => {
-    // Navigate back to project workspace > Permissions tab
+  it("Step 6: Set schedule task permissions for MJ team", () => {
+    dashboardPage.selectWorkspaceByName("Project");
+    cy.wait(1500);
     cy.get(PERMISSIONS_TAB_ID).click();
     cy.wait(2500);
 
-    // Select MJ team in the left panel
     cy.get(PERMISSIONS_TEAMS_PANEL_ITEM).contains(TEAM_NAME).click();
     cy.wait(1000);
 
-    // Switch to Schedule tab
     cy.get(PERMISSIONS_SCHEDULE_TAB).click();
     cy.wait(1500);
 
@@ -254,90 +233,112 @@ describe("Project-Level Teams & Permissions (MJ)", () => {
     cy.wait(1500);
 
     // First task → No Access
-    cy.get(SCHEDULE_TASK_ROW)
-      .eq(0)
-      .find(SCHEDULE_TASK_PERMISSION_CELL)
-      .click({ force: true });
-    cy.wait(800);
-    cy.get(PERMISSION_DROPDOWN_ITEM).contains(/no\s*access/i).click();
-    cy.wait(1000);
-
+    setRowPermission(SCHEDULE_TASK_ROW, 0, SCHEDULE_TASK_PERMISSION_CELL, /no\s*access/i);
     // Second task → Limited Access
-    cy.get(SCHEDULE_TASK_ROW)
-      .eq(1)
-      .find(SCHEDULE_TASK_PERMISSION_CELL)
-      .click({ force: true });
-    cy.wait(800);
-    cy.get(PERMISSION_DROPDOWN_ITEM).contains(/limited\s*access/i).click();
-    cy.wait(1000);
+    setRowPermission(SCHEDULE_TASK_ROW, 1, SCHEDULE_TASK_PERMISSION_CELL, /limited\s*access/i);
   });
 
-  // ── Step 8: Login as MJ user and verify schedule access ──────────────────
+  // ── Step 7: Login as User MJ and verify BOTH document + schedule access ──
 
-  it("Step 8: Login as MJ user and verify schedule task permissions", function () {
+  it("Step 7: Login as User MJ and verify document + schedule permissions", () => {
     logoutCurrentUser();
-    loginPage.login(this.users.nonPmUser.email, this.users.nonPmUser.password);
+    loginPage.login(users.nonPmUser.email, users.nonPmUser.password);
     loginPage.closeModalIfPresent();
     loginPage.closeNotificationIfPresent();
     dashboardPage.openProjectBySearch(PROJECT_NAME);
+
+    // ── Coordination verification ────────────────────────────────────────
+    dashboardPage.selectWorkspaceByName("Coordination");
+    cy.wait(2000);
+
+    coordinationFilesPage.verifyFolderExists("perm-folder-1");
+    coordinationFilesPage.verifyFolderExists("perm-folder-2");
+
+    // perm-folder-1 → Read Only: rename disabled
+    coordinationFilesPage.selectFolderByName("perm-folder-1");
+    cy.wait(500);
+    cy.get(COORDINATION_RENAME_BUTTON).should("be.disabled");
+
+    // perm-folder-2 → Full Access: rename enabled, and actually performs
+    // the rename to prove edit truly works (not just that the button is
+    // clickable). Modal-based flow: click rename → type new name in the
+    // dialog input → click Save → folder list shows the new name.
+    coordinationFilesPage.selectFolderByName("perm-folder-2");
+    cy.wait(500);
+    cy.get(COORDINATION_RENAME_BUTTON).should("not.be.disabled").click();
+    cy.wait(1000);
+    cy.get(COORDINATION_RENAME_MODAL_INPUT)
+      .clear()
+      .type(RENAMED_FOLDER_2);
+    cy.get(COORDINATION_RENAME_MODAL_SAVE).click();
+    cy.wait(2000);
+    coordinationFilesPage.verifyFolderExists(RENAMED_FOLDER_2);
+
+    // ── Schedule verification (same session, no re-login) ────────────────
     dashboardPage.selectWorkspaceByName("Schedule");
     cy.wait(2500);
 
-    // Schedule should be visible
     schedulePage.verifyScheduleExists(SCHEDULE_NAME);
     schedulePage.openScheduleByName(SCHEDULE_NAME);
     cy.wait(2000);
 
-    // First task (No Access) — should NOT be displayed
+    // Task 1 (No Access) → should NOT be displayed
     taskCreationPage.verifyTaskDoesNotExist("New Task - 1");
 
-    // Second task (Limited Access) — should be visible and editable
+    // Task 2 (Limited Access) → visible and editable. Limited Access
+    // doesn't grant rename, but does permit field edits like % completed.
+    // Setting % to 55 and re-reading the cell confirms the edit persisted.
+    // Row 0 is the only row User MJ can see (task 1 hidden by No Access).
     taskCreationPage.verifyTaskExists("New Task - 2");
-    taskCreationPage.renameTask("New Task - 2", RENAMED_TASK_2);
-    taskCreationPage.verifyTaskExists(RENAMED_TASK_2);
+    taskCreationPage.setPercentForRow(0, TASK_2_PERCENT);
+    taskCreationPage.verifyTaskPercentByRow(0, TASK_2_PERCENT);
   });
 
-  // ── Step 9: Login back as admin — cleanup ────────────────────────────────
+  // ── Step 8: Login back as admin and delete the team ──────────────────────
 
-  it("Step 9: Login back as admin and delete the team", function () {
+  it("Step 8: Login back as admin and delete the team", () => {
     logoutCurrentUser();
-    loginAsAdmin(this.users);
+    loginAsAdmin(users);
     dashboardPage.openProjectBySearch(PROJECT_NAME);
 
     cy.get(TEAMS_TAB_ID).click();
     cy.wait(2000);
 
-    // Select the MJ team and open its 3-dots menu
     cy.get(TEAMS_LEFT_PANEL_ITEM).contains(TEAM_NAME).click();
     cy.wait(800);
-    cy.get(TEAMS_LEFT_PANEL_ITEM)
-      .contains(TEAM_NAME)
-      .parent()
-      .find("i[class*='Three-Dots'], .iconUILarge-Three-Dots")
+
+    // The 3-dots button sits in the MJ team's board-column header — a
+    // standard Ant dropdown trigger button. Scope by column title so we
+    // don't pick another team's button (column nth-child order isn't
+    // stable).
+    cy.contains(".board-column .column-title", TEAM_NAME)
+      .closest(".board-column")
+      .find("button.ant-btn.ant-dropdown-trigger.ant-btn-icon-only")
       .first()
       .click({ force: true });
     cy.wait(800);
 
-    // Click Delete option in the overlay menu
+    // Delete option in the dropdown overlay (cdk-overlay id is dynamic,
+    // so match on text inside any visible overlay menu item).
     cy.get(`${COMMON.overlayContainer} li:visible`)
       .contains(/delete/i)
       .click();
     cy.wait(1000);
 
-    // Confirm deletion in popup
-    cy.get(COMMON.modalDangerButton).first().click();
+    // Confirm in the modal — the danger (red) button in the modal footer.
+    cy.get("cmacs-modal button.ant-btn-danger:visible").first().click();
     cy.wait(1500);
 
     cy.get(TEAMS_LEFT_PANEL_ITEM).should("not.contain.text", TEAM_NAME);
   });
 
-  it("Step 10: Clear all folders in Coordination", () => {
+  it("Step 9: Clear all folders in Coordination", () => {
     dashboardPage.selectWorkspaceByName("Coordination");
     cy.wait(2000);
     coordinationFilesPage.deleteAllFolders();
   });
 
-  it("Step 11: Delete the created schedule", () => {
+  it("Step 10: Delete the created schedule", () => {
     dashboardPage.selectWorkspaceByName("Schedule");
     cy.wait(2000);
     schedulePage.deleteScheduleByName(SCHEDULE_NAME);
