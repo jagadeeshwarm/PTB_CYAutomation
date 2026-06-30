@@ -224,6 +224,17 @@ class TodoWorkflowPage {
     this.clickCreate();
   }
 
+  /**
+   * Minimal create flow per the side-panel/filter/export use case: only Title +
+   * Assigned-To, then Create. (The richer createTodo() fills every field.)
+   */
+  createTodoMinimal(title) {
+    this.clickNewTodo();
+    this.enterTitle(title);
+    this.selectAssignedUser();
+    this.clickCreate();
+  }
+
   // ── Kanban helpers ────────────────────────────────────────────────────────
 
   /** A .wx-card that contains a <p> whose exact text is the ToDo title. */
@@ -419,6 +430,323 @@ class TodoWorkflowPage {
       .contains(/^\s*Update\s*$/)
       .click({ force: true });
     cy.wait(2500);
+  }
+
+  // ── Side panel tab navigation ─────────────────────────────────────────────
+
+  /** Click a top-level side-panel tab by its label ("Overview" / "Essentials"). */
+  clickTopTab(tabText) {
+    cy.get(`${TODO_WORKFLOW.sidePanel} .ant-tabs-tab`, { timeout: 10000 })
+      .filter((_i, t) => t.textContent.trim() === tabText)
+      .first()
+      .click({ force: true });
+    cy.wait(800);
+  }
+
+  /** Activate the top-level "Essentials" tab in the open side panel. */
+  ensureEssentialsTab() {
+    cy.get(TODO_WORKFLOW.sidePanel, { timeout: 10000 }).should("be.visible");
+    this.clickTopTab(TODO_WORKFLOW.essentialsTabText);
+  }
+
+  /**
+   * Click an icon-only sub-tab under Essentials by index:
+   * 0 = Summary, 1 = Comments, 2 = Attachment, 3 = History.
+   */
+  clickEssentialsIconTab(index) {
+    cy.get(TODO_WORKFLOW.essentialsIconTabs, { timeout: 10000 })
+      .eq(index)
+      .click({ force: true });
+    cy.wait(1000);
+  }
+
+  // ── Side-panel Title rename ───────────────────────────────────────────────
+
+  /**
+   * On the Essentials > Summary sub-tab, locate the Title field by its CURRENT
+   * value (robust against structural churn), clear it, and type a new value.
+   * Uses {selectall}{backspace} rather than .clear() — per coding-conventions
+   * the Delete key triggers a global delete shortcut in this app.
+   */
+  renameTitleInSidePanel(oldTitle, newTitle) {
+    this.ensureEssentialsTab();
+    this.clickEssentialsIconTab(0); // Summary holds the Title field
+    cy.get(TODO_WORKFLOW.sidePanelEditableFields, { timeout: 10000 })
+      .filter((_i, el) => (el.value || "").trim() === oldTitle)
+      .first()
+      .scrollIntoView()
+      .click()
+      .type("{selectall}{backspace}")
+      .type(newTitle)
+      .blur();
+    cy.wait(1500);
+  }
+
+  /** Assert the side panel reflects the new title (input value or text). */
+  verifyTitleInSidePanel(newTitle) {
+    cy.get(TODO_WORKFLOW.sidePanel, { timeout: 10000 }).should(($panel) => {
+      const hasInputValue = $panel
+        .find("input, textarea")
+        .toArray()
+        .some((el) => (el.value || "").trim() === newTitle);
+      const hasText = $panel.text().includes(newTitle);
+      expect(hasInputValue || hasText, "title updated to new value").to.be.true;
+    });
+  }
+
+  // ── Comments ──────────────────────────────────────────────────────────────
+
+  /**
+   * On the Essentials > Comments sub-tab: reveal the editor with "Add Comment"
+   * (if collapsed), type into the TinyMCE iframe body, and submit with "Add".
+   */
+  addComment(text) {
+    this.ensureEssentialsTab();
+    this.clickEssentialsIconTab(1); // Comments
+
+    // The form may start collapsed behind an "Add Comment" button; click it if
+    // present, otherwise the TinyMCE editor is already shown.
+    cy.get("body").then(($body) => {
+      const $addCommentBtn = Cypress.$(TODO_WORKFLOW.commentForm)
+        .find("button")
+        .toArray()
+        .find((b) =>
+          b.textContent
+            .trim()
+            .toLowerCase()
+            .includes(TODO_WORKFLOW.addCommentButtonText.toLowerCase())
+        );
+      if ($addCommentBtn) {
+        cy.wrap($addCommentBtn).click({ force: true });
+        cy.wait(800);
+      }
+    });
+
+    // Type into the TinyMCE editor — its contenteditable <body> lives in an
+    // iframe, so reach the iframe document and wrap its body.
+    cy.get(TODO_WORKFLOW.commentEditorIframe, { timeout: 10000 })
+      .should("exist")
+      .then(($iframe) => {
+        const doc = $iframe[0].contentDocument;
+        const body = doc.body;
+        cy.wrap(body).click().type(text, { force: true });
+      });
+    cy.wait(500);
+
+    // Submit with the primary "Add" button in the comment form.
+    cy.get(TODO_WORKFLOW.commentAddButton, { timeout: 10000 })
+      .filter(":visible")
+      .first()
+      .click({ force: true });
+    cy.wait(2000);
+  }
+
+  /** Assert the just-added comment text is rendered in the comments list. */
+  verifyCommentAdded(text) {
+    cy.get(TODO_WORKFLOW.commentsContainer, { timeout: 10000 }).should(
+      "contain.text",
+      text
+    );
+  }
+
+  // ── Attachments ───────────────────────────────────────────────────────────
+
+  /**
+   * On the Essentials > Attachment sub-tab: click "Upload Files" and feed the
+   * fixture into the hidden file input (file inputs are always hidden → force,
+   * never filter :visible).
+   */
+  uploadAttachment(fixturePath) {
+    this.ensureEssentialsTab();
+    this.clickEssentialsIconTab(2); // Attachment
+
+    cy.get(TODO_WORKFLOW.sidePanel)
+      .contains("button, a", TODO_WORKFLOW.uploadFilesButtonText)
+      .filter(":visible")
+      .first()
+      .click({ force: true });
+    cy.wait(800);
+
+    cy.get(TODO_WORKFLOW.attachmentFileInput)
+      .last()
+      .selectFile(`cypress/fixtures/${fixturePath}`, { force: true });
+    cy.wait(5000);
+  }
+
+  /** Assert the uploaded file's name appears in the side panel. */
+  verifyAttachmentUploaded(fileName) {
+    cy.get(TODO_WORKFLOW.sidePanel, { timeout: 15000 }).should(
+      "contain.text",
+      fileName
+    );
+  }
+
+  // ── Smart filter — "Created by me" ────────────────────────────────────────
+
+  /**
+   * Open the board's "Smart" filter dropdown and tick the "Created by me" item.
+   *
+   * The dropdown opens via the "Smart" label trigger (the provided `ul` is not
+   * the trigger). Its menu items live in a cdk overlay and are COVERED, so they
+   * need REAL clicks — a forced click only registers as hover (see the dropdown
+   * rule in ems-module-gotchas).
+   */
+  filterByCreatedByMe() {
+    // Open the menu by clicking the "Smart" trigger button in the toolbar.
+    cy.get(TODO_WORKFLOW.smartFilterControl, { timeout: 15000 })
+      .filter(":visible")
+      .first()
+      .click()
+      // The "Smart" cmacs-tooltip lingers over the first menu item; move the
+      // mouse off the trigger so the tooltip disappears and the item is clickable.
+      .trigger("mouseout")
+      .trigger("mouseleave");
+    cy.get("body").trigger("mousemove", { clientX: 5, clientY: 5 });
+    cy.wait(1000);
+
+    // Real click on the "Created by me" row. The menu renders INLINE (not in a
+    // cdk overlay), so target .smart-dropdown-content. cy.contains finds the
+    // deepest node holding the text (the checkbox label's <span>); "Created by
+    // me" is unique to this item.
+    cy.get(TODO_WORKFLOW.smartFilterMenu, { timeout: 10000 })
+      .contains(TODO_WORKFLOW.smartFilterCreatedByMeText)
+      .click();
+    cy.wait(2000);
+
+    // Close the inline dropdown by toggling its own trigger (do NOT click a
+    // blind corner like 0,0 — that opens the workspace nav, which then covers
+    // the board cards).
+    cy.get(TODO_WORKFLOW.smartFilterControl)
+      .filter(":visible")
+      .first()
+      .click()
+      .trigger("mouseout")
+      .trigger("mouseleave");
+    cy.wait(1000);
+  }
+
+  /** Open the side panel of the first card shown after filtering. */
+  openFirstCard() {
+    // Click the card's title <p> (a stable inner target) rather than the card
+    // div, whose centre can be occupied by a child span.
+    cy.get(TODO_WORKFLOW.card, { timeout: 15000 })
+      .filter(":visible")
+      .first()
+      .find("p")
+      .first()
+      .click();
+    cy.get(TODO_WORKFLOW.sidePanel, { timeout: 10000 }).should("be.visible");
+    cy.wait(1000);
+  }
+
+  /**
+   * Verify the "Created By" field shows a human NAME (not a user id or email).
+   * The field is searched on the Overview tab first, then the Essentials >
+   * Summary sub-tab, since its exact location can vary.
+   */
+  verifyCreatedByIsName(expectedName) {
+    cy.get(TODO_WORKFLOW.sidePanel, { timeout: 10000 }).should("be.visible");
+
+    // Look on Overview first.
+    this.clickTopTab(TODO_WORKFLOW.overviewTabText);
+    cy.get(TODO_WORKFLOW.sidePanel).then(($panel) => {
+      if (/created\s*by/i.test($panel.text())) {
+        this._assertCreatedBy($panel, expectedName);
+      } else {
+        // Fall back to Essentials > Summary.
+        this.ensureEssentialsTab();
+        this.clickEssentialsIconTab(0);
+        cy.get(TODO_WORKFLOW.sidePanel).then(($panel2) =>
+          this._assertCreatedBy($panel2, expectedName)
+        );
+      }
+    });
+  }
+
+  /** Locate the "Created By" label leaf, read its value, assert it is a name. */
+  _assertCreatedBy($panel, expectedName) {
+    const leaf = $panel
+      .find("*")
+      .toArray()
+      .find(
+        (el) => el.childElementCount === 0 && /created\s*by/i.test(el.textContent)
+      );
+    expect(leaf, "Created By label present in side panel").to.exist;
+
+    const labelText = leaf.textContent.trim();
+    // Climb until the container carries text beyond the label itself (the value).
+    let container = leaf.parentElement;
+    let value = "";
+    let guard = 0;
+    while (container && guard < 5) {
+      value = container.textContent.replace(labelText, "").replace(/\s+/g, " ").trim();
+      if (value) break;
+      container = container.parentElement;
+      guard += 1;
+    }
+
+    expect(value, "Created By is not empty").to.not.be.empty;
+    expect(value, "Created By is a name, not an email").to.not.contain("@");
+    expect(value, "Created By contains letters (a name)").to.match(/[A-Za-z]/);
+    if (expectedName) {
+      expect(value.toLowerCase()).to.contain(expectedName.toLowerCase());
+    }
+    cy.log(`Created By = "${value}"`);
+  }
+
+  // ── Export (Excel / PDF) ──────────────────────────────────────────────────
+
+  /**
+   * Click the board's 3-dots menu, choose "Export Excel" (REAL click — overlay
+   * items are covered and ignore forced clicks), then poll the downloads folder
+   * until a NEW .xlsx appears.
+   */
+  exportExcelAndVerify() {
+    this._exportAndVerify(TODO_WORKFLOW.exportExcelText, ".xlsx");
+  }
+
+  exportPdfAndVerify() {
+    this._exportAndVerify(TODO_WORKFLOW.exportPdfText, ".pdf");
+  }
+
+  /**
+   * Open the board's 3-dots menu, click the given export option (REAL click —
+   * overlay items are covered and ignore forced clicks), then poll the downloads
+   * folder until a fresher file of `ext` appears. The export overwrites a fixed
+   * filename, so freshness is detected by mtime, not by a new path.
+   */
+  _exportAndVerify(optionText, ext) {
+    const downloads = Cypress.config("downloadsFolder");
+
+    cy.task("latestFileMtime", { dir: downloads, ext }).then((beforeMtime) => {
+      cy.get(TODO_WORKFLOW.moreOptionsButton, { timeout: 15000 })
+        .filter(":visible")
+        .first()
+        .click();
+      cy.wait(800);
+
+      cy.get(`${COMMON.overlayContainer} ul:visible`, { timeout: 10000 })
+        .contains("li", optionText)
+        .click();
+
+      // Downloads can take a moment — poll a few times for a fresher file.
+      this._waitForNewDownload(downloads, ext, beforeMtime, 8);
+    });
+  }
+
+  /** Recursively poll until the newest file of `ext` is fresher than before. */
+  _waitForNewDownload(downloads, ext, beforeMtime, attemptsLeft) {
+    cy.wait(1500);
+    cy.task("latestFileMtime", { dir: downloads, ext }).then((afterMtime) => {
+      const isNew =
+        afterMtime !== null &&
+        (beforeMtime === null || afterMtime > beforeMtime);
+      if (isNew || attemptsLeft <= 0) {
+        expect(isNew, `a new ${ext} was downloaded`).to.be.true;
+      } else {
+        this._waitForNewDownload(downloads, ext, beforeMtime, attemptsLeft - 1);
+      }
+    });
   }
 }
 

@@ -66,6 +66,62 @@ export const TODO_WORKFLOW = {
   sidePanelSection: "todo-details .section-content",
   reassignLink: "todo-details a", // filtered by text "Reassign"
 
+  // ── Side panel: real DOM (todo-side-panel) ────────────────────────────────
+  // The open side panel is <todo-side-panel><cmacs-side-panel>. Its top tabset
+  // carries "Overview" / "Essentials"; under Essentials, <app-todo-essentials>
+  // has its own icon-only sub-tabset: [0] Summary, [1] Comments, [2] Attachment,
+  // [3] History.
+  sidePanel: "todo-side-panel",
+  sidePanelContent: "todo-side-panel cmacs-side-panel .cmacs-side-panel-content",
+  // Top-level tab labels.
+  overviewTabText: "Overview",
+  essentialsTabText: "Essentials",
+  // Icon-only sub-tabs inside Essentials (Summary / Comments / Attachment / History).
+  essentialsIconTabs:
+    "todo-side-panel app-todo-essentials > cmacs-tabset .ant-tabs-nav-list .ant-tabs-tab",
+
+  // ── Title field (Essentials > Summary) ────────────────────────────────────
+  // Editable inputs live under app-todo-essentials; the Title field is located
+  // dynamically by its current value rather than a brittle structural path.
+  sidePanelEditableFields:
+    "todo-side-panel app-todo-essentials input, todo-side-panel app-todo-essentials textarea",
+
+  // ── Comments (Essentials > Comments) ──────────────────────────────────────
+  // <app-comment-form> holds the "Add Comment" reveal button, a TinyMCE <editor>
+  // (renders into an iframe), and the primary "Add" submit button.
+  commentForm: "todo-side-panel app-comment-form",
+  addCommentButtonText: "Add Comment",
+  // TinyMCE editor iframe — its contenteditable <body> is the comment box.
+  commentEditorIframe: "todo-side-panel app-comment-form editor iframe",
+  commentAddButton:
+    "todo-side-panel app-comment-form button.btn-form-primary.ant-btn-primary",
+  // The comment list region (used to assert a posted comment is rendered).
+  commentsContainer: "todo-side-panel todo-comments app-comments",
+
+  // ── Attachments (Essentials > Attachment) ─────────────────────────────────
+  uploadFilesButtonText: "Upload Files",
+  attachmentFileInput: "todo-side-panel input[type='file']",
+
+  // ── Created By (side panel) ───────────────────────────────────────────────
+  createdByLabelText: "Created By",
+
+  // ── Smart filter (board toolbar "Smart" dropdown) ─────────────────────────
+  // The "Smart" trigger is a <button>; clicking it opens a cdk overlay of filter
+  // checkboxes. "Created by me" is the first item, matched by text (overlay id
+  // is dynamic).
+  smartFilterControl:
+    "app-todos-root todo-bar div.page-header-rightside > div > div:nth-child(1) > button",
+  // The dropdown menu renders INLINE (not in a cdk overlay) as
+  // div.smart-dropdown-content > ul.filternav > li ... label > span(text).
+  smartFilterMenu: ".smart-dropdown-content",
+  smartFilterCreatedByMeText: "Created by me",
+
+  // ── Export menu (3-dots) ──────────────────────────────────────────────────
+  // Reuses the board toolbar's "..." dropdown trigger; Excel / PDF items are
+  // matched by text inside the visible overlay (overlay id is dynamic).
+  exportExcelText: "Export Excel",
+  exportPdfText: "Export PDF",
+
   // ── ToDo detail page (full view / new-tab target) ─────────────────────────
   detailPageStatusSection: "app-todo-essentials .section-content",
 };

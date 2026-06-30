@@ -76,6 +76,16 @@ async function findLatestFile({ dir, ext }) {
   return matches.length ? matches[0].full : null;
 }
 
+// Return the mtime (ms) of the most recently modified file in `dir` matching
+// `ext`, or null if none. Used to detect a fresh download even when the export
+// overwrites a fixed filename (e.g. "ToDos.xlsx") — the path stays the same but
+// the mtime advances.
+async function latestFileMtime({ dir, ext }) {
+  const latest = await findLatestFile({ dir, ext });
+  if (!latest) return null;
+  return fs.statSync(latest).mtimeMs;
+}
+
 // Restore the file from .bak (created by xlsxEditCell). No-op if no backup.
 async function xlsxRestore({ path: filePath }) {
   const absPath = path.resolve(filePath);
@@ -88,4 +98,10 @@ async function xlsxRestore({ path: filePath }) {
   return { restored: false };
 }
 
-module.exports = { xlsxRead, xlsxEditCell, xlsxRestore, findLatestFile };
+module.exports = {
+  xlsxRead,
+  xlsxEditCell,
+  xlsxRestore,
+  findLatestFile,
+  latestFileMtime,
+};
