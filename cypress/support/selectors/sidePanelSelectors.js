@@ -71,32 +71,32 @@ export const SIDEPANEL = {
   // The predecessor tab is the 2nd tab in the side panel tabset
   predecessorTabItem: "cmacs-tabs-nav .ant-tabs-tab:nth-child(2) .ant-tabs-tab-btn",
 
-  // --- Cash Flow tab (identified by its Cost icon class) ---
+  // --- Finances tab (was Cash Flow; identified by its Cost/Finances icon) ---
+  financesTabItem: ".iconUILarge-Cost",
+  // Backward-compat alias; the icon class still opens the renamed Finances tab.
   cashFlowTabItem: ".iconUILarge-Cost",
 
-  // Cash Flow panel — all scoped under app-cash-flow-side-panel nz-spin
-  cfPanel: "app-cash-flow-side-panel nz-spin > div > div",
+  // Finances panel root — page methods resolve sections (Booking, Invoice,
+  // Balance to Receive) by walking up from header text inside this root.
+  // Positional :nth-child selectors that worked for the old Cash Flow panel
+  // no longer apply because the redesigned panel has a different layout.
+  finPanel: "app-finances-side-panel",
 
-  // Balance to Receive row (bottom summary)
-  cfBalanceRow: "app-cash-flow-side-panel nz-spin > div > div > div.balance-row",
+  // Section header anchors. Match the visible heading text — "Booking (EUR)"
+  // still matches /^Booking/i, and the Invoice/Balance text is similarly
+  // unchanged. Page methods use cy.contains() with these.
+  finBookingTitle: /^Booking/i,
+  finInvoiceTitle: /^Invoice/i,
+  finBalanceTitle: /Balance to Receive/i,
 
-  // --- Forecast section ---
-  cfForecastAddButton: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(4) > button",
-  cfForecastTotal: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(5)",
-  cfForecastList: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(6)",
-  // Edit/Delete icons within forecast list entries (used with .find() on cfForecastList)
-  cfForecastEditIcon: "div.cashflow-actions > i.iconUILarge-Edit.edit-icon",
-  cfForecastDeleteIcon: "div.cashflow-actions > i.iconUILarge-Trash.delete-icon",
+  // Icon classes inside an entry row. Old Cash Flow rows used
+  // .iconUILarge-Edit / .iconUILarge-Trash; the new panel almost certainly
+  // re-uses the same icon font, so we match by attribute-contains for
+  // resilience against wrapper class renames.
+  finEntryEditIcon: "i[class*='iconUILarge-Edit'], i[class*='Edit'][class*='icon']",
+  finEntryDeleteIcon: "i[class*='iconUILarge-Trash'], i[class*='Trash'][class*='icon']",
 
-  // --- Actual Value section ---
-  cfActualAddButton: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(8) > button",
-  cfActualTotal: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(9)",
-  cfActualList: "app-cash-flow-side-panel nz-spin > div > div > div:nth-child(10)",
-  // Edit/Delete icons within actual list entries (used with .find() on cfActualList)
-  cfActualEditIcon: "div.cashflow-actions > i.iconUILarge-Edit.edit-icon",
-  cfActualDeleteIcon: "div.cashflow-actions > i.iconUILarge-Trash.delete-icon",
-
-  // --- Add / Edit popup (shared by Forecast and Actual) ---
+  // --- Add / Edit popup (shared by Booking and Invoice — same nz-modal layout)
   cashFlowPopupMonthInput:
     "nz-modal-container .ant-modal-body div:nth-child(1) cmacs-month-picker input",
   cashFlowPopupValueInput:

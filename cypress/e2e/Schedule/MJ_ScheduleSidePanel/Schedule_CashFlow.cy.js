@@ -45,36 +45,36 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(500);
     sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
+    sidePanelPage.openFinancesTab();
 
     // Add Forecast: Jun 2026, €1,000
-    sidePanelPage.addForecastEntry("Jun 2026", 1000);
+    sidePanelPage.addBookingEntry("Jun 2026", 1000);
 
     // Verify
-    sidePanelPage.verifyForecastTotal(1000);
-    sidePanelPage.verifyForecastEntryCount(1);
+    sidePanelPage.verifyBookingTotal(1000);
+    sidePanelPage.verifyBookingEntryCount(1);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
   // ── Step 3: Add Actual Value ───────────────────────────────────────────
 
   it("Step 3: Add Actual Value €400 for Jun 2026", () => {
-    sidePanelPage.addActualEntry("Jun 2026", 400);
+    sidePanelPage.addInvoiceEntry("Jun 2026", 400);
 
     // Verify
-    sidePanelPage.verifyActualTotal(400);
-    sidePanelPage.verifyActualEntryCount(1);
+    sidePanelPage.verifyInvoiceTotal(400);
+    sidePanelPage.verifyInvoiceEntryCount(1);
     sidePanelPage.verifyBalanceToReceive(600);
   });
 
   // ── Step 4: Add Another Actual Value ───────────────────────────────────
 
   it("Step 4: Add another Actual Value €200 for Jul 2026", () => {
-    sidePanelPage.addActualEntry("Jul 2026", 200);
+    sidePanelPage.addInvoiceEntry("Jul 2026", 200);
 
     // Verify
-    sidePanelPage.verifyActualTotal(600);
-    sidePanelPage.verifyActualEntryCount(2);
+    sidePanelPage.verifyInvoiceTotal(600);
+    sidePanelPage.verifyInvoiceEntryCount(2);
     sidePanelPage.verifyBalanceToReceive(400);
   });
 
@@ -82,21 +82,21 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
 
   it("Step 5: Edit the Jun 2026 actual entry from €400 to €500", () => {
     // Jun 2026 is the first actual entry (index 0)
-    sidePanelPage.editActualEntry(0, 500);
+    sidePanelPage.editInvoiceEntry(0, 500);
 
     // Verify
-    sidePanelPage.verifyActualTotal(700);
+    sidePanelPage.verifyInvoiceTotal(700);
     sidePanelPage.verifyBalanceToReceive(300);
   });
 
   // ── Step 6: Add Another Forecast Entry ─────────────────────────────────
 
   it("Step 6: Add Forecast €1,500 for Aug 2026", () => {
-    sidePanelPage.addForecastEntry("Aug 2026", 1500);
+    sidePanelPage.addBookingEntry("Aug 2026", 1500);
 
     // Verify
-    sidePanelPage.verifyForecastTotal(2500);
-    sidePanelPage.verifyForecastEntryCount(2);
+    sidePanelPage.verifyBookingTotal(2500);
+    sidePanelPage.verifyBookingEntryCount(2);
     sidePanelPage.verifyBalanceToReceive(1800);
   });
 
@@ -104,11 +104,11 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
 
   it("Step 7: Delete the Jun 2026 forecast entry (€1,000)", () => {
     // Jun 2026 is the first forecast entry (index 0)
-    sidePanelPage.deleteForecastEntry(0);
+    sidePanelPage.deleteBookingEntry(0);
 
     // Verify
-    sidePanelPage.verifyForecastTotal(1500);
-    sidePanelPage.verifyForecastEntryCount(1);
+    sidePanelPage.verifyBookingTotal(1500);
+    sidePanelPage.verifyBookingEntryCount(1);
     sidePanelPage.verifyBalanceToReceive(800);
   });
 
@@ -116,11 +116,11 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
 
   it("Step 8: Delete the Jul 2026 actual entry (€200)", () => {
     // After the Jun edit (€500), Jul (€200) is the second entry (index 1)
-    sidePanelPage.deleteActualEntry(1);
+    sidePanelPage.deleteInvoiceEntry(1);
 
     // Verify
-    sidePanelPage.verifyActualTotal(500);
-    sidePanelPage.verifyActualEntryCount(1);
+    sidePanelPage.verifyInvoiceTotal(500);
+    sidePanelPage.verifyInvoiceEntryCount(1);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
@@ -135,13 +135,13 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(500);
     sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
+    sidePanelPage.openFinancesTab();
 
     // Verify all values remain unchanged
-    sidePanelPage.verifyForecastTotal(1500);
-    sidePanelPage.verifyForecastEntryCount(1);
-    sidePanelPage.verifyActualTotal(500);
-    sidePanelPage.verifyActualEntryCount(1);
+    sidePanelPage.verifyBookingTotal(1500);
+    sidePanelPage.verifyBookingEntryCount(1);
+    sidePanelPage.verifyInvoiceTotal(500);
+    sidePanelPage.verifyInvoiceEntryCount(1);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
@@ -157,10 +157,10 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(300);
     sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
+    sidePanelPage.openFinancesTab();
 
-    sidePanelPage.verifyForecastTotal(1500);
-    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBookingTotal(1500);
+    sidePanelPage.verifyInvoiceTotal(500);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
@@ -176,10 +176,10 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(300);
     sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
+    sidePanelPage.openFinancesTab();
 
-    sidePanelPage.verifyForecastTotal(1500);
-    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBookingTotal(1500);
+    sidePanelPage.verifyInvoiceTotal(500);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
@@ -207,9 +207,9 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     sidePanelPage.verifyResourceInList();
 
     // Verify Cash Flow values unchanged
-    sidePanelPage.openCashFlowTab();
-    sidePanelPage.verifyForecastTotal(1500);
-    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.openFinancesTab();
+    sidePanelPage.verifyBookingTotal(1500);
+    sidePanelPage.verifyInvoiceTotal(500);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
@@ -240,7 +240,7 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(300);
     sidePanelPage.open();
-    sidePanelPage.verifyNoCashFlowTab();
+    sidePanelPage.verifyNoFinancesTab();
   });
 
   it("Step 13b: Logout Non-PM user, login as PM user, verify Cash Flow data is accessible", () => {
@@ -268,10 +268,10 @@ describe("Cash Flow – Positive End-to-End Flow", () => {
     taskCreationPage.getTaskRows().eq(0).click();
     cy.wait(300);
     sidePanelPage.open();
-    sidePanelPage.openCashFlowTab();
+    sidePanelPage.openFinancesTab();
 
-    sidePanelPage.verifyForecastTotal(1500);
-    sidePanelPage.verifyActualTotal(500);
+    sidePanelPage.verifyBookingTotal(1500);
+    sidePanelPage.verifyInvoiceTotal(500);
     sidePanelPage.verifyBalanceToReceive(1000);
   });
 
