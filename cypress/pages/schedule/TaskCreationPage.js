@@ -727,6 +727,18 @@ class TaskCreationPage {
     cy.wait(800);
   }
 
+  // Convert a task into a 0D milestone. Selects via the full row set
+  // (getTaskRows / ganttRows) rather than ganttTaskRows, so the index stays
+  // correct even after earlier rows have already become milestones or folders
+  // — those drop out of ganttTaskRows and would otherwise shift the index.
+  convertRowToMilestone(rowIndex) {
+    this.getTaskRows().eq(rowIndex).click();
+    cy.wait(300);
+    this.scrollGanttLeft();
+    this.setDuration(0);
+    this.scrollGanttRight();
+  }
+
   // Append a new top-level task below the last existing row.
   addTopLevelTaskBelowLast() {
     this.selectLastTask();

@@ -29,6 +29,7 @@ export const SCHEDULE_NAMES = {
   STATUS_3CHILD:  `Facade_Status3Child_${runStamp}`,
   STATUS_CC:      `Facade_StatusCC_${runStamp}`,
   SMART_FILTER:   `Facade_SmartFilter_${runStamp}`,
+  SHARE:          `Facade_ShareSchedule_${runStamp}`,
   PLANNED_ACTUAL: `Facade_PlannedActual_${runStamp}`,
   RESOURCES:      `Facade_ResourcesTimesheet_${runStamp}`,
 };
