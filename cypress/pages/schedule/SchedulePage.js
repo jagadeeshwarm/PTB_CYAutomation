@@ -89,26 +89,80 @@ class SchedulePage {
     cy.wait(2000);
   }
 
+  // Select a schedule in the list, open its "…" menu and mark it primary.
+  // Dashboard finance aggregation reads the primary schedule. Idempotent: if
+  // "Mark as Primary" is already disabled, the schedule is primary → skip.
+  markScheduleAsPrimary(scheduleName) {
+    this.selectScheduleByName(scheduleName);
+    cy.get(SCHEDULE.scheduleBarMoreButton).first().click();
+    cy.wait(800);
+    // Scope to the VISIBLE dropdown item — an unscoped/force click can hit a
+    // stale hidden overlay and never open the confirmation modal.
+    cy.get(`${SCHEDULE.scheduleActionMenuItem}:visible`, { timeout: 10000 })
+      .contains(/mark as primary/i)
+      .then(($item) => {
+        const $li = $item.closest(".ant-dropdown-menu-item");
+        const disabled =
+          $li.hasClass("ant-dropdown-menu-item-disabled") ||
+          $li.attr("aria-disabled") === "true";
+        if (disabled) {
+          // Already the primary schedule — close the dropdown, nothing to do.
+          cy.get("body").type("{esc}");
+          cy.wait(300);
+        } else {
+          cy.wrap($item).click();
+          // Wait for the "Mark as Primary" confirmation modal, then click OK.
+          cy.get(SCHEDULE.markPrimaryConfirmOk, { timeout: 10000 })
+            .filter(":visible")
+            .first()
+            .click();
+          cy.wait(2000);
+        }
+      });
+  }
+
   // --- Schedule deletion ---
+
+  // Click the danger/confirm button if a confirmation modal is still visible.
+  _clickDangerIfVisible() {
+    cy.get("body").then(($body) => {
+      if ($body.find(`${COMMON.scheduleModalDangerButton}:visible`).length > 0) {
+        cy.get(COMMON.scheduleModalDangerButton)
+          .filter(":visible")
+          .first()
+          .click();
+        cy.wait(1500);
+      }
+    });
+  }
 
   confirmScheduleDelete() {
     cy.get(COMMON.modal, { timeout: 10000 }).should("be.visible");
-    cy.get(COMMON.scheduleModalDangerButton).first().click();
-    cy.wait(1000);
+    cy.get(COMMON.scheduleModalDangerButton).filter(":visible").first().click();
+    cy.wait(1500);
 
-    // Optional secondary confirmation for primary project schedule
-    cy.get("body").then(($body) => {
-      if ($body.text().includes(SCHEDULE.primaryProjectScheduleText)) {
-        cy.get(COMMON.scheduleModalDangerButton).first().click();
-        cy.wait(1000);
-      }
-    });
+    // A primary schedule triggers extra confirmations — click the danger button
+    // again for each one still/again visible (more robust than matching text).
+    this._clickDangerIfVisible();
+    this._clickDangerIfVisible();
 
     cy.wait(2000);
   }
 
   deleteScheduleByName(scheduleName) {
     this.selectScheduleByName(scheduleName);
+    this.deleteScheduleButton.click();
+    cy.wait(1000);
+    this.confirmScheduleDelete();
+  }
+
+  // Delete via the multi-select flow: toggle checkboxes, tick "select all",
+  // click delete, then confirm (twice more for a primary schedule).
+  deleteAllSchedulesViaMultiSelect() {
+    cy.get(SCHEDULE.scheduleMultiSelectButton).click();
+    cy.wait(800);
+    cy.get(SCHEDULE.scheduleSelectAllCheckbox).check({ force: true });
+    cy.wait(500);
     this.deleteScheduleButton.click();
     cy.wait(1000);
     this.confirmScheduleDelete();

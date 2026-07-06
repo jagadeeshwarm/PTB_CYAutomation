@@ -474,6 +474,229 @@ class SidePanelPage {
       .should("have.length", count);
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  //  Finances tab — live app (Booking/Invoicing + Nalco sub-tabs, INR)
+  //  Matches the current `app-cash-flow-side-panel` DOM: a date-picker + PI
+  //  number popup for Booking/Invoice, and a PI-ID + value popup for Nalco.
+  //  (Distinct from the legacy Booking/Invoice month-picker helpers above.)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // The Finances body scrolls as entries are added — reset it to the top before
+  // each action so the target section and its "+" button are in view.
+  scrollFinancesTop() {
+    cy.get(SIDEPANEL.finScrollContainer)
+      .first()
+      .scrollTo("top", { ensureScrollable: false });
+    cy.wait(300);
+  }
+
+  openBookingInvoicingSubTab() {
+    cy.get(SIDEPANEL.finInnerTab)
+      .contains(SIDEPANEL.finBookingInvoicingTabText)
+      .click({ force: true });
+    cy.wait(600);
+  }
+
+  openNalcoSubTab() {
+    cy.get(SIDEPANEL.finInnerTab)
+      .contains(SIDEPANEL.finNalcoTabText)
+      .click({ force: true });
+    cy.wait(600);
+  }
+
+  // Resolve a Finances section (Booking / Invoice / Nalco Invoice / Nalco
+  // Collection) by header text, scoped to the active sub-tab pane. Walks up from
+  // the header to the nearest ancestor that owns a button — that wrapper is the
+  // section root, isolating its "+" button and entry rows from sibling sections.
+  _finSectionV2(headerAnchor) {
+    return cy
+      .get(SIDEPANEL.finActivePane)
+      .contains(headerAnchor)
+      .parents()
+      .filter(":has(button)")
+      .first();
+  }
+
+  _clickSectionAdd(headerAnchor) {
+    this.scrollFinancesTop();
+    this._finSectionV2(headerAnchor)
+      .find("button")
+      .first()
+      .click({ force: true });
+    cy.wait(800);
+  }
+
+  // ── Booking/Invoice popup fields ───────────────────────────────────────
+
+  // Booking/Invoice popup date picker (ng-zorro calendar). Opens the calendar,
+  // navigates to the target month/year via the header arrows, then clicks the
+  // in-view day cell. Input is mm/dd/yyyy.
+  pickFinancePopupDate(mmddyyyy) {
+    const [mm, dd, yyyy] = mmddyyyy.split("/").map((s) => parseInt(s, 10));
+    cy.get(SIDEPANEL.finPopupDatePicker).click();
+    cy.wait(500);
+    this._navigateDatePanel(yyyy, mm);
+    cy.get(SIDEPANEL.finDateTableCell)
+      .filter((_i, td) => td.textContent.trim() === String(dd))
+      .first()
+      .click();
+    cy.wait(400);
+  }
+
+  // Recursively click the prev/next-month arrow until the calendar header shows
+  // the target month & year. Month label reads e.g. "Jul"; year label "2026".
+  _navigateDatePanel(targetYear, targetMonth) {
+    const MONTHS = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    const targetIdx = targetYear * 12 + (targetMonth - 1);
+    cy.get(SIDEPANEL.finDateMonthLabel)
+      .invoke("text")
+      .then((monthText) => {
+        cy.get(SIDEPANEL.finDateYearLabel)
+          .invoke("text")
+          .then((yearText) => {
+            const curMonth = MONTHS.indexOf(monthText.trim().slice(0, 3)) + 1;
+            const curYear = parseInt(yearText.trim(), 10);
+            const curIdx = curYear * 12 + (curMonth - 1);
+            if (curIdx < targetIdx) {
+              cy.get(SIDEPANEL.finDateNextMonth).click();
+              cy.wait(250);
+              this._navigateDatePanel(targetYear, targetMonth);
+            } else if (curIdx > targetIdx) {
+              cy.get(SIDEPANEL.finDatePrevMonth).click();
+              cy.wait(250);
+              this._navigateDatePanel(targetYear, targetMonth);
+            }
+          });
+      });
+  }
+
+  enterFinancePopupValue(amount) {
+    cy.get(SIDEPANEL.finPopupValueInput)
+      .click()
+      .type("{selectall}{backspace}")
+      .type(String(amount));
+    cy.wait(300);
+  }
+
+  enterFinancePopupPi(piNumber) {
+    cy.get(SIDEPANEL.finPopupPiInput)
+      .click()
+      .type("{selectall}{backspace}")
+      .type(String(piNumber));
+    cy.wait(300);
+  }
+
+  confirmFinancePopup() {
+    cy.get(SIDEPANEL.finPopupConfirm).click();
+    cy.wait(1200);
+  }
+
+  // ── Booking / Invoice entries ──────────────────────────────────────────
+
+  addBooking({ date, value, pi }) {
+    this._clickSectionAdd(SIDEPANEL.finBookingHeader);
+    this.pickFinancePopupDate(date);
+    this.enterFinancePopupValue(value);
+    this.enterFinancePopupPi(pi);
+    this.confirmFinancePopup();
+  }
+
+  addInvoice({ date, value, pi }) {
+    this._clickSectionAdd(SIDEPANEL.finInvoiceHeader);
+    this.pickFinancePopupDate(date);
+    this.enterFinancePopupValue(value);
+    this.enterFinancePopupPi(pi);
+    this.confirmFinancePopup();
+  }
+
+  // ── Nalco entries (PI-ID + value only, no date) ────────────────────────
+
+  enterNalcoPopupPi(piId) {
+    cy.get(SIDEPANEL.finNalcoPopupPiInput)
+      .click()
+      .type("{selectall}{backspace}")
+      .type(String(piId));
+    cy.wait(300);
+  }
+
+  enterNalcoPopupValue(amount) {
+    cy.get(SIDEPANEL.finNalcoPopupValueInput)
+      .click()
+      .type("{selectall}{backspace}")
+      .type(String(amount));
+    cy.wait(300);
+  }
+
+  addNalcoInvoice({ pi, value }) {
+    this._clickSectionAdd(SIDEPANEL.finNalcoInvoiceHeader);
+    this.enterNalcoPopupPi(pi);
+    this.enterNalcoPopupValue(value);
+    this.confirmFinancePopup();
+  }
+
+  addNalcoCollection({ pi, value }) {
+    this._clickSectionAdd(SIDEPANEL.finNalcoCollectionHeader);
+    this.enterNalcoPopupPi(pi);
+    this.enterNalcoPopupValue(value);
+    this.confirmFinancePopup();
+  }
+
+  // ── Finances verification (INR) ────────────────────────────────────────
+
+  // Assert a section's total includes the numeric amount, ignoring the currency
+  // symbol and Indian-style grouping (e.g. "₹10,00,000" ⇒ 1000000). The total
+  // value is rendered in the sibling div immediately AFTER the header/"+" div
+  // (Booking header = div:nth-child(3), its value = div:nth-child(4)).
+  _verifyFinSectionContains(headerAnchor, amount) {
+    const digits = String(amount).replace(/[^0-9]/g, "");
+    this._finSectionV2(headerAnchor)
+      .next()
+      .invoke("text")
+      .then((text) => {
+        const normalized = text.replace(/[^0-9]/g, "");
+        expect(
+          normalized,
+          `section "${headerAnchor}" value should contain ${amount}`,
+        ).to.include(digits);
+      });
+  }
+
+  verifyBookingSectionTotal(amount) {
+    this.scrollFinancesTop();
+    this._verifyFinSectionContains(SIDEPANEL.finBookingHeader, amount);
+  }
+
+  verifyInvoiceSectionTotal(amount) {
+    this.scrollFinancesTop();
+    this._verifyFinSectionContains(SIDEPANEL.finInvoiceHeader, amount);
+  }
+
+  verifyNalcoInvoiceTotal(amount) {
+    this.scrollFinancesTop();
+    this._verifyFinSectionContains(SIDEPANEL.finNalcoInvoiceHeader, amount);
+  }
+
+  verifyNalcoCollectionTotal(amount) {
+    this.scrollFinancesTop();
+    this._verifyFinSectionContains(SIDEPANEL.finNalcoCollectionHeader, amount);
+  }
+
+  // Balance to Receive = Booking − Invoice. Pass 0 to assert "₹0".
+  verifyBalanceRow(amount) {
+    this.scrollFinancesTop();
+    cy.get(SIDEPANEL.finBalanceRow)
+      .invoke("text")
+      .then((text) => {
+        const numeric = this._parseCurrency(
+          text.replace(/Balance\s*to\s*Receive/i, ""),
+        );
+        expect(numeric, "Balance to Receive").to.equal(amount);
+      });
+  }
+
   setCashFlowForecast(amount) {
     cy.get(SIDEPANEL.cashFlowForecastInput)
       .type("{selectall}{backspace}")

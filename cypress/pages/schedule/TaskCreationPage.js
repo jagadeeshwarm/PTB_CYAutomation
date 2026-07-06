@@ -726,6 +726,12 @@ class TaskCreationPage {
     cy.get('[name="indent"] > .iconspan').click();
     cy.wait(800);
   }
+
+  // Append a new top-level task below the last existing row.
+  addTopLevelTaskBelowLast() {
+    this.selectLastTask();
+    this.addBelowViaPlusMenu();
+  }
 }
 
 export default new TaskCreationPage();

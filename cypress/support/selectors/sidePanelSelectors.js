@@ -158,4 +158,65 @@ export const SIDEPANEL = {
   // Tab nav wrapper — used to assert which tabs are (or are not) present
   sidePanelTabsNav:
     "app-pss-prop-side-panel cmacs-tabs-nav > div > div",
+
+  // ─── Finances tab (current app: app-cash-flow-side-panel) ───────────────
+  // The Finances tab hosts an inner tabset with two sub-tabs:
+  //   • Booking/Invoicing  → Booking + Invoice sections + Balance to Receive
+  //   • Nalco              → Nalco Invoice + Nalco Collection sections
+  // Selectors below are trimmed to stable ancestors from the real DOM paths.
+  finRoot: "app-cash-flow-side-panel",
+  // Scrollable side-panel body — the panel scrolls after each entry is added,
+  // so tests reset it to the top before every action inside the Finances tab.
+  finScrollContainer: ".cmacs-side-panel-content",
+  // Inner sub-tab strip (Booking/Invoicing | Nalco)
+  finInnerTabsNav: "app-cash-flow-side-panel cmacs-tabset cmacs-tabs-nav",
+  finInnerTab: "app-cash-flow-side-panel cmacs-tabset cmacs-tabs-nav .ant-tabs-tab",
+  finBookingInvoicingTabText: "Booking",
+  finNalcoTabText: "Nalco",
+  // Currently-active sub-tab pane
+  finActivePane: "app-cash-flow-side-panel .ant-tabs-tabpane-active",
+  // Balance to Receive row inside the Booking/Invoicing pane
+  finBalanceRow:
+    "app-cash-flow-side-panel .ant-tabs-tabpane-active .balance-row",
+
+  // Section header anchors (used with cy.contains inside the active pane).
+  // Headers show the currency, e.g. "Booking (INR)" / "Nalco Invoice (INR)".
+  finBookingHeader: /^\s*Booking\b/i,
+  finInvoiceHeader: /^\s*Invoice\b/i,
+  finNalcoInvoiceHeader: /Nalco\s*Invoice/i,
+  finNalcoCollectionHeader: /Nalco\s*Collection/i,
+
+  // Add/Edit popup — Booking & Invoice share the same nz-modal layout:
+  //   div:nth-child(1) → date picker, .value-form-group → amount, div:nth-child(3) → PI number
+  finPopupDatePicker:
+    "nz-modal-container .ant-modal-body > div:nth-child(1) cmacs-date-picker",
+  finPopupValueInput:
+    "nz-modal-container .ant-modal-body .value-form-group input",
+  finPopupPiInput:
+    "nz-modal-container .ant-modal-body > div:nth-child(3) > input",
+  finPopupConfirm:
+    "nz-modal-container .ant-modal-footer button.ant-btn-primary",
+
+  // Nalco Invoice / Collection popup — no date field:
+  //   div:nth-child(1) → PI-ID, .value-form-group → amount
+  finNalcoPopupPiInput:
+    "nz-modal-container .ant-modal-body > div:nth-child(1) > input",
+  finNalcoPopupValueInput:
+    "nz-modal-container .ant-modal-body .value-form-group input",
+
+  // Calendar (ng-zorro nz-date-picker inside a custom date-range-popup).
+  // Navigate months with the prev/next arrows, read the month/year label to
+  // know when to stop, then click the in-view day cell.
+  finDatePrevMonth:
+    ".cdk-overlay-container date-range-popup .ant-picker-header-prev-btn",
+  finDateNextMonth:
+    ".cdk-overlay-container date-range-popup .ant-picker-header-next-btn",
+  finDateMonthLabel:
+    ".cdk-overlay-container date-range-popup .ant-picker-header-month-btn",
+  finDateYearLabel:
+    ".cdk-overlay-container date-range-popup .ant-picker-header-year-btn",
+  // Only current-month, enabled cells (avoids clicking an adjacent month's
+  // same-numbered day, e.g. 30-Jun vs 30-Jul).
+  finDateTableCell:
+    ".cdk-overlay-container date-range-popup date-table table td.ant-picker-cell-in-view:not(.ant-picker-cell-disabled)",
 };
