@@ -166,6 +166,16 @@ class SchedulePage {
     this.deleteScheduleButton.click();
     cy.wait(1000);
     this.confirmScheduleDelete();
+    this.waitForScheduleListIdle();
+  }
+
+  // Deleting every schedule at once — a primary among them — keeps the list
+  // spinner up well past confirmScheduleDelete's fixed waits. Block until the
+  // list has finished reloading so the caller isn't asserting against rows the
+  // server is still tearing down. Passes straight through if no spinner shows.
+  waitForScheduleListIdle(timeout = 60000) {
+    cy.get(COMMON.loadingSpinner, { timeout }).should("not.exist");
+    cy.wait(500);
   }
 
   // --- Validations ---
@@ -174,8 +184,14 @@ class SchedulePage {
     this.scheduleListTable.should("contain.text", scheduleName);
   }
 
-  verifyScheduleDoesNotExist(scheduleName) {
-    this.scheduleListTable.should("not.contain.text", scheduleName);
+  // The row disappears only once the delete round-trip completes and the list
+  // re-fetches, which takes longer than the 10s default command timeout when
+  // several schedules go at once.
+  verifyScheduleDoesNotExist(scheduleName, timeout = 60000) {
+    cy.get(SCHEDULE.scheduleListTable, { timeout }).should(
+      "not.contain.text",
+      scheduleName,
+    );
   }
 }
 

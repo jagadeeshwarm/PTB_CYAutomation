@@ -25,17 +25,47 @@ class DashboardFinancePage {
     cy.wait(500);
   }
 
-  // Assert a section's text contains a numeric amount, ignoring currency symbol
-  // and Indian-style grouping (e.g. "₹35,00,000" ⇒ 3500000).
+  // Indian short-scale units used by the dashboard's currency formatter.
+  static get UNITS() {
+    return { cr: 1e7, l: 1e5, k: 1e3 };
+  }
+
+  // Pull every "₹<number><unit?>" token out of `text` and return the rupee
+  // values. The dashboard renders abbreviated amounts ("₹35.00 L" = 35 lakh,
+  // "₹7.63 Cr" = 7.63 crore); older builds printed them in full ("₹35,00,000").
+  // Both parse correctly — a missing unit is just a multiplier of 1.
+  //
+  // Digit-stripping the whole card cannot work here: "₹35.00 L" reduces to
+  // "3500", and the unit that makes it 3500000 is discarded along with it.
+  _parseRupeeAmounts(text) {
+    const re = /₹\s*([\d,]+(?:\.\d+)?)\s*(Cr|L|K)?/gi;
+    const amounts = [];
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const value = parseFloat(m[1].replace(/,/g, ""));
+      if (Number.isNaN(value)) continue;
+      const unit = m[2] ? DashboardFinancePage.UNITS[m[2].toLowerCase()] : 1;
+      amounts.push(value * unit);
+    }
+    return amounts;
+  }
+
+  // Assert `selector`'s text shows `amount` as one of its rupee figures.
+  // An abbreviated figure carries only two decimals, so "₹35.12 L" pins the
+  // true value to ±500. Allow a 0.5% relative tolerance to absorb that
+  // rounding; it stays far tighter than the gap between any two figures we
+  // check on the same card.
   _sectionContains(selector, amount, label) {
-    const digits = String(amount).replace(/[^0-9]/g, "");
     cy.get(selector)
       .invoke("text")
       .then((text) => {
-        const normalized = text.replace(/[^0-9]/g, "");
-        expect(normalized, `${label} should contain ${amount}`).to.include(
-          digits,
-        );
+        const amounts = this._parseRupeeAmounts(text);
+        const tolerance = Math.max(1, amount * 0.005);
+        const found = amounts.some((v) => Math.abs(v - amount) <= tolerance);
+        expect(
+          found,
+          `${label} should show ${amount} — parsed [${amounts.join(", ")}] from "${text.trim()}"`,
+        ).to.be.true;
       });
   }
 
@@ -83,19 +113,21 @@ class DashboardFinancePage {
   }
 
   // Expand a lot row (click its header) and verify its Booking + Invoice amounts.
+  // The row chips render abbreviated too ("Bookings: ₹10.00 L").
   expandAndVerifyLot(lotName, { booking, invoice }) {
     cy.get(DASHBOARD_FINANCE.lotSummaryPanel).contains(lotName).click();
     cy.wait(800);
 
-    const bookingDigits = String(booking).replace(/[^0-9]/g, "");
-    const invoiceDigits = String(invoice).replace(/[^0-9]/g, "");
-    cy.get(DASHBOARD_FINANCE.lotSummaryPanel)
-      .invoke("text")
-      .then((text) => {
-        const normalized = text.replace(/[^0-9]/g, "");
-        expect(normalized, `${lotName} Booking`).to.include(bookingDigits);
-        expect(normalized, `${lotName} Invoice`).to.include(invoiceDigits);
-      });
+    this._sectionContains(
+      DASHBOARD_FINANCE.lotSummaryPanel,
+      booking,
+      `${lotName} Booking`,
+    );
+    this._sectionContains(
+      DASHBOARD_FINANCE.lotSummaryPanel,
+      invoice,
+      `${lotName} Invoice`,
+    );
   }
 }
 

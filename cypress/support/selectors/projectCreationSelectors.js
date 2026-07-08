@@ -46,6 +46,11 @@ export const PROJECT_CREATION = {
   startDateClear:
     "basic-info-panel form > div > div:nth-child(7) cmacs-date-picker span.ant-picker-clear",
 
+  // Step panels — each wizard step renders its own Angular component. Used to
+  // assert the wizard actually advanced rather than silently staying put.
+  basicInfoPanel: "basic-info-panel",
+  locationPanel: "app-address",
+
   // Location
   locationSearchInput:
     "app-address form div:nth-child(1) app-address-search input",

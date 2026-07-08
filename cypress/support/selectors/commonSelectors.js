@@ -14,6 +14,11 @@ export const COMMON = {
   overlayList: ".cdk-overlay-container ul",
   overlayListItem: ".cdk-overlay-container li",
 
+  // Ant Design spinner, present only while a nz-spin block is loading. Asserting
+  // "not.exist" against it passes immediately when nothing is loading, so it's
+  // safe to use as a settle-point even where a spinner never appears.
+  loadingSpinner: ".ant-spin-spinning",
+
   // Notifications
   notificationClose: ".ant-notification-close",
   releaseModalCookie: "a.release-modal-cookie",

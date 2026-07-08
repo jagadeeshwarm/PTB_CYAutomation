@@ -2,6 +2,7 @@ import loginPage from "../../pages/LoginPage";
 import dashboardPage from "../../pages/DashboardPage";
 import projectCreationPage from "../../pages/ProjectCreationPage";
 import checklistPage from "../../pages/ChecklistPage";
+import { PROJECT_CREATION } from "../../support/selectors";
 import {
   parseXlsxSections,
   flattenSectionAPairs,
@@ -27,8 +28,12 @@ const LOCATION = {
 // Used for the TC02 sanity check (company/project header text). Project
 // substring is intentionally unused for now — the project-address widget
 // content varies per import and isn't being verified.
+//
+// This is the company's own master address, not import data — it renders the
+// same for every project. The sample HTML this was copied from ended in the
+// German "Indien"; staging now stores the country as "India".
 const EXPECTED_COMPANY_SUBSTRING =
-  "Schueco India Pvt Ltd. Powai Mumbai Maharashtra 400076 Indien";
+  "Schueco India Pvt Ltd. Powai Mumbai Maharashtra 400076 India";
 
 // Title/Value pair we add to every checklist table in TC04 and remove in TC07.
 const ADDED_ROW_TITLE = `AutoTest Row ${Date.now()}`;
@@ -94,9 +99,14 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
     projectCreationPage.clickNext();
 
     // Basic info — overwrite Project Number to keep it unique across runs.
-    // Other fields are auto-populated by the import.
+    // Other fields are auto-populated by the import. The Project Number field
+    // has an async uniqueness validator, so Next can no-op if it's still
+    // pending — clickNextTo asserts we actually landed on the Location step.
     projectCreationPage.clearAndTypeProjectNumber(PROJECT_NUMBER);
-    projectCreationPage.clickNext();
+    projectCreationPage.clickNextTo(
+      PROJECT_CREATION.basicInfoPanel,
+      PROJECT_CREATION.locationPanel,
+    );
 
     // Location — fill required address fields (Line 1, City, Zip are required
     // and not auto-populated by the import), then Next.
@@ -360,9 +370,11 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
 
   // ── TC08: Project Deletion ──────────────────────────────────────────────
   it("TC08: Delete the project and verify it's removed from the list", function () {
-    projectCreationPage.navigateToProjectsList();
+    // Projects list → "All" tab → search the project number, then open the card.
+    projectCreationPage.findProjectInAllTab(PROJECT_NUMBER);
     projectCreationPage.clickProjectCardByText(PROJECT_NUMBER);
     projectCreationPage.deleteCurrentProject();
+    // Back to "All", search again, and confirm the project is gone.
     projectCreationPage.verifyProjectNotInList(PROJECT_NUMBER);
   });
 });

@@ -4,7 +4,7 @@ import emsModelPage from "../../pages/ems/EmsModelPage";
 import emsSystemPage from "../../pages/ems/EmsSystemPage";
 import { EMS_SYSTEM } from "../../support/selectors";
 
-const PROJECT_NAME = "Automation Project";
+const PROJECT_NAME = "Automation Project 3";
 
 // Schuco-style random data (keyword library lives in the selectors module).
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];

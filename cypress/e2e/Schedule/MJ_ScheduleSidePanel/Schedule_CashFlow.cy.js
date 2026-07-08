@@ -78,7 +78,7 @@ describe("Cash Flow – Booking/Invoicing + Nalco end-to-end", () => {
       this.users = users;
       loginPage.visit();
       // Log in as the admin PM user for this project.
-      loginPage.login("adminuser001@yopmail.com", "Password1234!");
+      loginPage.login("tramreddy@schueco.com", "Password1234!");
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
       // Navigate: All → search "Automation Project" → open → Planning workspace.
@@ -180,8 +180,13 @@ describe("Cash Flow – Booking/Invoicing + Nalco end-to-end", () => {
 
   it("Step 7: Reload and verify Lot 1 & Lot 2 finances persist", () => {
     sidePanelPage.close();
-    cy.reload();
-    cy.get(".gantt_grid_data", { timeout: 15000 }).should("be.visible");
+    // cy.reload() blocks on the window `load` event, which only fires once every
+    // subresource has settled. The Gantt page paints the schedule long before
+    // that happens, so the global 30s pageLoadTimeout can expire on a page that
+    // is already fully rendered. Give this reload room rather than raising the
+    // timeout globally — a genuine hang should still surface fast elsewhere.
+    cy.reload({ timeout: 120000 });
+    cy.get(".gantt_grid_data", { timeout: 30000 }).should("be.visible");
     cy.wait(1000);
 
     // Lot 1

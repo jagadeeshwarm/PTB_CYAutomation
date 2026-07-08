@@ -3,7 +3,7 @@ import dashboardPage from "../../pages/DashboardPage";
 import emsModelPage from "../../pages/ems/EmsModelPage";
 import emsBatchPage from "../../pages/ems/EmsBatchPage";
 
-const PROJECT_NAME = "Automation Project";
+const PROJECT_NAME = "Automation Project 3";
 
 const pad = (n) => String(n).padStart(2, "0");
 const now = new Date();

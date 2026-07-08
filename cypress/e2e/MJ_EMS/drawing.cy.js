@@ -4,7 +4,7 @@ import emsModelPage from "../../pages/ems/EmsModelPage";
 import emsDrawingPage from "../../pages/ems/EmsDrawingPage";
 import { EMS_DRAWING } from "../../support/selectors";
 
-const PROJECT_NAME = "Automation Project";
+const PROJECT_NAME = "Automation Project 3";
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const pad = (n) => String(n).padStart(2, "0");
 const now = new Date();

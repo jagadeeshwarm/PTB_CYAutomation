@@ -104,13 +104,38 @@ class ChecklistPage {
     });
 
     // The checklist module / list loads asynchronously after the route
-    // changes. Right after click the list often renders empty ("No data") —
-    // wait, then reload, then assert the PIS row is actually present.
-    cy.wait(20000);
-    cy.reload();
-    cy.wait(3000);
+    // changes. Right after an import the list often renders empty ("No data")
+    // because the Project Info Sheet row is still being generated server-side.
+    cy.wait(10000);
     cy.get(CHECKLIST.root, { timeout: 30000 }).should("exist");
+    this._waitForFirstChecklistRow();
     cy.get(CHECKLIST.listFirstRow, { timeout: 20000 }).should("be.visible");
+  }
+
+  // Poll for the PIS row, reloading between attempts.
+  //
+  // A bare `cy.get(row).should("be.visible")` cannot work here: the checklist
+  // list is fetched once per page load, so an empty response leaves the DOM
+  // static and Cypress just retries against the same empty table until it
+  // times out. Only a reload re-issues the request. Each attempt costs ~5s
+  // plus the reload, so this waits roughly a minute before giving up.
+  _waitForFirstChecklistRow(attempt = 0, maxAttempts = 6) {
+    cy.wait(5000);
+    cy.get("body").then(($body) => {
+      if ($body.find(CHECKLIST.listFirstRow).length > 0) return;
+      if (attempt >= maxAttempts) {
+        throw new Error(
+          `Checklist list is still empty after ${maxAttempts} reloads — the ` +
+            `Project Info Sheet row was never generated for this project. If ` +
+            `this persists, check that the logged-in user's company is the one ` +
+            `that auto-generates checklists, and that the user can see them.`,
+        );
+      }
+      cy.log(`[checklist] list empty — reload ${attempt + 1}/${maxAttempts}`);
+      cy.reload();
+      cy.get(CHECKLIST.root, { timeout: 30000 }).should("exist");
+      this._waitForFirstChecklistRow(attempt + 1, maxAttempts);
+    });
   }
 
   visitChecklistFor(projectId) {

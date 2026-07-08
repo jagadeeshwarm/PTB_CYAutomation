@@ -1,4 +1,5 @@
 import { PROJECT_CREATION, COMMON } from "../support/selectors";
+import dashboardPage from "./DashboardPage";
 
 class ProjectCreationPage {
   // --- Company switching ---
@@ -86,6 +87,25 @@ class ProjectCreationPage {
     cy.wait(2000);
   }
 
+  // Click Next and confirm the wizard reached `toPanel`. If it didn't — and
+  // we're demonstrably still on `fromPanel` — click once more. Checking that
+  // `fromPanel` is still mounted is what makes the retry safe: without it, a
+  // slow-rendering `toPanel` would get a second click and skip a step.
+  clickNextTo(fromPanel, toPanel) {
+    cy.get(PROJECT_CREATION.nextButton).click();
+    cy.wait(2000);
+    cy.get("body").then(($body) => {
+      const arrived = $body.find(toPanel).length > 0;
+      const stillHere = $body.find(fromPanel).length > 0;
+      if (!arrived && stillHere) {
+        cy.log("[wizard] Next did not advance — retrying once");
+        cy.get(PROJECT_CREATION.nextButton).click();
+        cy.wait(2000);
+      }
+    });
+    cy.get(toPanel, { timeout: 15000 }).should("exist");
+  }
+
   clickCreate() {
     cy.get(PROJECT_CREATION.createButton).click();
     cy.wait(5000);
@@ -108,9 +128,34 @@ class ProjectCreationPage {
     cy.wait(500);
   }
 
+  // The Project Number field runs an async uniqueness validator on every
+  // keystroke (POST /Project/IsProjectNumberValid). While any response is
+  // outstanding the Angular form sits in PENDING state — the Next button stays
+  // *enabled* but its handler silently no-ops, so the wizard never advances.
+  // Type, then wait for the validator to go quiet before anyone clicks Next.
   clearAndTypeProjectNumber(projectNumber) {
+    cy.intercept("POST", "**/IsProjectNumberValid*").as("projectNumberCheck");
     cy.get(PROJECT_CREATION.projectNumber).clear().type(projectNumber);
+    // Guarantees at least one call was captured, so the alias below resolves.
+    cy.wait("@projectNumberCheck");
+    this._waitForProjectNumberIdle();
+  }
+
+  // Poll until every captured IsProjectNumberValid call has a response AND no
+  // new call was issued since the previous poll — i.e. the debounced validator
+  // has settled, not just answered the request we happened to catch first.
+  _waitForProjectNumberIdle(prevTotal = -1, attempt = 0, maxAttempts = 20) {
     cy.wait(500);
+    cy.get("@projectNumberCheck.all").then((calls) => {
+      const total = calls.length;
+      const answered = calls.every((c) => c.response);
+      if (attempt >= maxAttempts) {
+        cy.log("[wizard] project-number validator never settled — continuing");
+        return;
+      }
+      if (answered && total === prevTotal) return;
+      this._waitForProjectNumberIdle(total, attempt + 1, maxAttempts);
+    });
   }
 
   selectStatus(statusText) {
@@ -278,6 +323,19 @@ class ProjectCreationPage {
   navigateToProjectsList() {
     cy.visit("/app/projects");
     cy.wait(2000);
+    dashboardPage.waitForPageLoad();
+    dashboardPage.closeFavoritesIfPresent();
+    // The list lands on "Recently Opened" by default and search results only
+    // render under the ACTIVE tab. Switch to "All" or both the delete lookup
+    // and the post-delete assertion end up querying an empty list.
+    dashboardPage.selectAllProjectsTab();
+  }
+
+  // Projects list → "All" tab → search for the project. Used both before the
+  // delete (to find the card) and after it (to prove the card is really gone).
+  findProjectInAllTab(projectIdentifier) {
+    this.navigateToProjectsList();
+    dashboardPage.searchProject(projectIdentifier);
   }
 
   // Click the card whose title contains the given project name/number.
@@ -317,8 +375,11 @@ class ProjectCreationPage {
     cy.wait(3000);
   }
 
+  // Re-navigate to "All", search the project number again, and assert nothing
+  // comes back. Searching first is what makes this a real assertion — asserting
+  // absence on an unsearched "Recently Opened" tab passes trivially.
   verifyProjectNotInList(projectIdentifier) {
-    this.navigateToProjectsList();
+    this.findProjectInAllTab(projectIdentifier);
     cy.contains(projectIdentifier).should("not.exist");
   }
 }

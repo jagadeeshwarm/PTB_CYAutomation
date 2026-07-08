@@ -9,7 +9,7 @@ const STAMP = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
   now.getDate()
 )}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 
-const PROJECT_NAME = "Automation Project";
+const PROJECT_NAME = "Automation Project 3";
 const EMS_NAME = `AUT_EMS_${STAMP}`;
 const GROUP_NAME = "AutGrp_01";
 const TODO_TITLE = `Aut EMS ToDo ${STAMP}`;
