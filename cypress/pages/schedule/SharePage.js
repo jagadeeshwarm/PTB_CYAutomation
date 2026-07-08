@@ -22,6 +22,32 @@ class SharePage {
     cy.wait(500);
   }
 
+  // Open the "Link Settings" dropdown and configure the advanced options for
+  // the shareable link: a password, an expiration date (mm/dd/yyyy) and the
+  // resource-view toggle. The dropdown-arrow button reveals the #dvPwd panel.
+  configureLinkSettings({ password, expirationDate, enableResourceView = true }) {
+    cy.get(SHARE.linkSettingsToggle).click();
+    cy.wait(800);
+
+    if (password) {
+      cy.get(SHARE.linkPasswordInput).clear().type(password);
+    }
+
+    if (expirationDate) {
+      // cmacs-date-picker takes a typed mm/dd/yyyy value; {enter} commits it and
+      // closes the calendar popup.
+      cy.get(SHARE.linkExpirationInput)
+        .click()
+        .type(`${expirationDate}{enter}`);
+      cy.wait(500);
+    }
+
+    if (enableResourceView) {
+      cy.get(SHARE.resourceViewSwitch).click();
+      cy.wait(300);
+    }
+  }
+
   // Stub the two copy mechanisms an Angular app may use (navigator.clipboard
   // and the CDK's document.execCommand('copy')) so we can capture the URL the
   // "Get shareable link" button writes to the clipboard — no OS clipboard read
@@ -58,7 +84,10 @@ class SharePage {
   // Click "Get shareable link" and yield the captured URL down the chain.
   getShareableLink() {
     this._prepareClipboardCapture();
-    cy.get(SHARE.getShareableLink).click();
+    // `.shared-link-box` holds several spans (link text + "Link Settings"
+    // dropdown), so match the "Get shareable link" span by text to keep the
+    // click subject to a single element.
+    cy.contains(SHARE.getShareableLink, /get shareable link/i).click();
     cy.wait(1500);
     return cy
       .window()
@@ -71,11 +100,18 @@ class SharePage {
 
   // Cypress can't drive a real second tab, so save the current URL, visit the
   // shared link in the same tab, run the assertions, then return to the schedule.
-  visitSharedLinkAndVerify(link, verifyFn) {
+  // Pass { password } for a password-protected link to answer the prompt that
+  // appears before the read-only gantt renders.
+  visitSharedLinkAndVerify(link, verifyFn, options = {}) {
     cy.url().then((originalUrl) => {
       const fullLink = link.startsWith("http") ? link : `https://${link}`;
       cy.visit(fullLink);
       cy.wait(5000);
+
+      if (options.password) {
+        this.enterSharedLinkPassword(options.password);
+      }
+
       cy.get(SHARE.readOnlyGantt, { timeout: 20000 }).should("exist");
 
       verifyFn();
@@ -83,6 +119,16 @@ class SharePage {
       cy.visit(originalUrl);
       cy.wait(5000);
     });
+  }
+
+  // Answer the "Enter password" prompt shown when opening a protected link.
+  enterSharedLinkPassword(password) {
+    cy.get(SHARE.sharedLinkPasswordInput, { timeout: 15000 })
+      .should("be.visible")
+      .clear()
+      .type(password);
+    cy.get(SHARE.sharedLinkPasswordSubmit).click();
+    cy.wait(3000);
   }
 
   // --- Read-only shared gantt assertions ---

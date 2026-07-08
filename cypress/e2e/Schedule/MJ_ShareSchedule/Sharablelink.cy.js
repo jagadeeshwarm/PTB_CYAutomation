@@ -3,7 +3,7 @@ import dashboardPage from "../../../pages/DashboardPage";
 import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import sharePage from "../../../pages/schedule/SharePage";
-import { dateOffset } from "../../../support/utils/dateUtils";
+import { dateOffset, dateOffsetMMDDYYYY } from "../../../support/utils/dateUtils";
 import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
 const SCHEDULE_NAME = SCHEDULE_NAMES.SHARE;
@@ -134,6 +134,27 @@ describe("Schedule - Share (Sharable Link)", () => {
       sharePage.visitSharedLinkAndVerify(link, () => {
         sharePage.verifySharedTaskNames(ALL_TASKS);
       });
+    });
+  });
+
+  it("Step 5a: Link Settings (password + expiry + resource view) → open with password → all 16 tasks visible", () => {
+    const password = "Test@1234";
+    const expirationDate = dateOffsetMMDDYYYY(30);
+
+    sharePage.openShareModal();
+    sharePage.configureLinkSettings({
+      password,
+      expirationDate,
+      enableResourceView: true,
+    });
+    sharePage.getShareableLink().then((link) => {
+      sharePage.visitSharedLinkAndVerify(
+        link,
+        () => {
+          sharePage.verifySharedTaskNames(ALL_TASKS);
+        },
+        { password },
+      );
     });
   });
 

@@ -11,12 +11,30 @@ export const SHARE = {
   // Share settings modal
   shareModal: "cmacs-modal app-share-settings",
 
-  // "Get shareable link" trigger (copies the URL to the clipboard on click)
+  // "Get shareable link" trigger (copies the URL to the clipboard on click).
+  // The box holds multiple spans (link text + "Link Settings" dropdown), so the
+  // page object narrows this to the link span by text via cy.contains().
   getShareableLink: "app-share-settings .shared-link-box span",
 
   // Scope radio group: label 1 = All (default), label 2 = Public
   scopePublicLabel: "app-share-settings cmacs-radio-group label:nth-child(2)",
   scopePublicInput: "app-share-settings cmacs-radio-group label:nth-child(2) input",
+
+  // "Link Settings" dropdown-arrow button in the share box — reveals the #dvPwd
+  // panel below (password, expiration date, resource-view toggle).
+  linkSettingsToggle: "app-share-settings .shared-link-box > div > button",
+
+  // Advanced link-settings panel (#dvPwd is a stable id on the revealed block).
+  linkPasswordInput: "#dvPwd .model-margin > div:first-child input",
+  linkExpirationPicker: "#dvPwd .model-margin cmacs-date-picker",
+  linkExpirationInput: "#dvPwd .model-margin cmacs-date-picker input",
+  resourceViewSwitch: "#dvPwd cmacs-switch button",
+
+  // Password prompt shown when opening a password-protected shared link.
+  // Target the stable trans-model hooks, not the dynamic cdk-overlay id.
+  sharedLinkPasswordInput: "cmacs-modal .trans-model-body input",
+  sharedLinkPasswordSubmit:
+    "cmacs-modal .trans-model-footer button.ant-btn-primary",
 
   // Close the share modal
   modalClose: "cmacs-modal .ant-modal-close",
