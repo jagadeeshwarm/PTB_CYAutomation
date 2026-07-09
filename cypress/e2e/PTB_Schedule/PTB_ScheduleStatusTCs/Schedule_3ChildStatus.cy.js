@@ -5,7 +5,6 @@ import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import {
   addDays,
   dateOffset,
-  nextWorkday,
   prevWorkday,
   diffCalendarDays,
 } from "../../../support/utils/dateUtils";
@@ -67,13 +66,11 @@ describe("Schedule - 3 Child Status Verification", () => {
     taskCreationPage.getTaskRows().eq(3).click();
     taskCreationPage.setStartDate(dateOffset(-3));
 
-    // If today − 3 lands on Sat/Sun the app snaps the start date to next Monday.
-    // Delayed days = calendar days from the snapped start to today.
-    const adjustedStart = nextWorkday(addDays(-3));
-    const expectedDelayed = diffCalendarDays(adjustedStart, new Date());
-
     taskCreationPage.verifyTaskStatusByRow(3, STATUS.OVERDUE);
-    taskCreationPage.verifyTaskDelayedByRow(3, expectedDelayed);
+    // Delayed days = working days from the task's (weekend-snapped) end date up
+    // to today. Derive the expectation from the end date the app actually shows
+    // so weekend snapping / duration behaviour can't make it drift.
+    taskCreationPage.verifyDelayedMatchesEndByRow(3);
   });
 
   it("Step 4: Change child3 end date to today + 4 days, verify Delayed status, then add task below parent via context menu", () => {

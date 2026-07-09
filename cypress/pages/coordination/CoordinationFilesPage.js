@@ -299,6 +299,28 @@ class CoordinationFilesPage {
     this.confirmNewFolder();
   }
 
+  /**
+   * Guarantee the Coordination root has at least one folder, so downstream
+   * pickers that attach a project folder (e.g. the EMS Documents "Select
+   * folders" modal) have a child to select under Root. Creates a folder only
+   * when none exists — keeps repeat runs from piling up folders. Assumes the
+   * Coordination > Files view is already open.
+   */
+  ensureAtLeastOneFolder(folderName) {
+    // Wait for the Files toolbar + folder cards to render before counting,
+    // otherwise a still-loading list reads as empty and we create needlessly.
+    cy.get(COORDINATION_FILES.addFolderButton, { timeout: 15000 }).should(
+      "be.visible"
+    );
+    cy.wait(2000);
+    cy.get(COORDINATION_FILES.foldersList).then(($list) => {
+      if ($list.find("cmacs-card").length === 0) {
+        this.createNewFolder(folderName);
+        this.verifyFolderExists(folderName);
+      }
+    });
+  }
+
   // ── Share ─────────────────────────────────────────────────────────────
 
   clickShare() {

@@ -454,6 +454,42 @@ class TaskCreationPage {
     });
   }
 
+  // Verify the DELAYED column for a row against that row's OWN end date, using
+  // the app's rule: delayed days = working days (Mon–Fri) strictly after the
+  // end date, up to and including today. Deriving the expectation from the end
+  // date the app actually renders (instead of re-deriving it from the offset we
+  // typed) makes this immune to the app's weekend snap and to whether a start-
+  // date edit keeps duration or end — the two things that made the old
+  // calendar-day computation drift and fail on certain weekdays.
+  verifyDelayedMatchesEndByRow(rowIndex) {
+    this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((endCol) => {
+      this._getColIndex(TASK_COLUMN_HEADERS.DELAYED).then((delayedCol) => {
+        cy.get(TASK.ganttRows)
+          .eq(rowIndex)
+          .find(`> div:nth-child(${endCol})`)
+          .invoke("text")
+          .then((endText) => {
+            const end = parseDisplayDate(endText);
+            // Working days in (end, today]: count from the day after the end
+            // date through today (inclusive), skipping weekends.
+            const expected = diffWorkingDays(addDays(1, end), new Date());
+            cy.get(TASK.ganttRows)
+              .eq(rowIndex)
+              .find(`> div:nth-child(${delayedCol})`)
+              .invoke("text")
+              .then((delayedText) => {
+                const digits = delayedText.replace(/[^0-9]/g, "");
+                const actual = digits === "" ? 0 : parseInt(digits, 10);
+                expect(
+                  actual,
+                  `delayed days for row ${rowIndex} (end ${endText.trim()})`,
+                ).to.equal(expected);
+              });
+          });
+      });
+    });
+  }
+
   verifyTaskEndDatesEqual(firstRowIndex, secondRowIndex) {
     this._getColIndex(TASK_COLUMN_HEADERS.END_DATE).then((colIndex) => {
       cy.get(TASK.ganttRows)

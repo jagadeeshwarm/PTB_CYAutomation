@@ -50,9 +50,14 @@ describe("Schedule - Task Status Verification", () => {
     taskCreationPage.verifyTaskStatus(STATUS.OVERDUE);
   });
 
-  it("Step 5: Change duration to 10 days → status should be DELAYED", () => {
+  it("Step 5: Change duration to 30 days → status should be DELAYED", () => {
     taskCreationPage.selectTask("New Task");
-    taskCreationPage.setDuration(10);
+    // Start is today−10. Use a wide duration so the end date lands well into the
+    // future: Step 6 nudges the end 2 days earlier and must stay DELAYED. With a
+    // small duration the end sat only ~1 day out, so the nudge (plus the app's
+    // weekend snap) crossed today and flipped the status to OVERDUE on certain
+    // weekdays. 30 working days keeps a large, weekday-independent margin.
+    taskCreationPage.setDuration(30);
     taskCreationPage.verifyTaskStatus(STATUS.DELAYED);
   });
 

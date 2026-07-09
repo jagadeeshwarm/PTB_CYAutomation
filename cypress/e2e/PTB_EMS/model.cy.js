@@ -1,6 +1,7 @@
 import loginPage from "../../pages/LoginPage";
 import dashboardPage from "../../pages/DashboardPage";
 import emsModelPage from "../../pages/ems/EmsModelPage";
+import coordinationFilesPage from "../../pages/coordination/CoordinationFilesPage";
 
 // Unique titles per run so list assertions are unambiguous.
 const pad = (n) => String(n).padStart(2, "0");
@@ -15,6 +16,10 @@ const GROUP_NAME = "AutGrp_01";
 const TODO_TITLE = `Aut EMS ToDo ${STAMP}`;
 const TICKET_TITLE = `Aut EMS Ticket ${STAMP}`;
 const UPLOAD_FILE = "upload-test-files/SingleTestFile.txt";
+// Fixed name (not per-run) so the before() hook reuses one folder instead of
+// creating a new one every run. Its only job is to give Step 11's "Select
+// folders" picker a child folder under Root to attach.
+const FOLDER_NAME = "EMS_Attach_Folder";
 
 const COST_QTY = 100;
 const COST_PER_UNIT = 10;
@@ -31,6 +36,12 @@ describe("EMS - Building Models - Model", () => {
       loginPage.closeModalIfPresent();
       loginPage.closeNotificationIfPresent();
       dashboardPage.openProjectBySearch(PROJECT_NAME);
+      // Step 11 attaches a project folder via the "Select folders" picker,
+      // which only lists child folders under Root. If Coordination has no
+      // folders (e.g. after Files.cy.js's cleanup wipes them), the picker is
+      // empty and Step 11 fails. Ensure at least one folder exists first.
+      dashboardPage.selectWorkspaceByName("Coordination");
+      coordinationFilesPage.ensureAtLeastOneFolder(FOLDER_NAME);
       // Lands on the Element Management home list (Building Structures).
       dashboardPage.selectWorkspaceByName("Element Management");
     });
@@ -123,6 +134,13 @@ describe("EMS - Building Models - Model", () => {
   it("Step 13: Create a New Ticket from the Tickets tab", () => {
     emsModelPage.clickNodeByName(elementName);
     emsModelPage.openTab("Tickets");
+    // The Tickets tab panel can render a beat after the tab click, so the modal
+    // wasn't open yet when clicked (Step 13 flake). Wait, then make sure the
+    // panel's "Create New Ticket" link is on screen before opening the modal.
+    cy.wait(3000);
+    cy.contains("app-defect-property-panel", /create new ticket/i, {
+      timeout: 15000,
+    }).should("be.visible");
     emsModelPage.clickCreateNewTicket();
     emsModelPage.enterTicketTitle(TICKET_TITLE);
     emsModelPage.selectTicketAssignee();
