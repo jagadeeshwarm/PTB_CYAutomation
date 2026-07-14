@@ -100,14 +100,14 @@ function openPermissionDropdown(rowSelector, rowIndex, cellSelector, attempt = 1
   });
 }
 
-// Pick the row's access type. The 3-second tail wait lets the inline
-// save loader finish before the caller moves on to the next row.
+// Pick the row's access type. Block on the inline save spinner clearing
+// so the caller doesn't move to the next row while the save is in flight.
 function setRowPermission(rowSelector, rowIndex, cellSelector, accessLabelRegex) {
   openPermissionDropdown(rowSelector, rowIndex, cellSelector);
   cy.get(PERMISSION_DROPDOWN_ITEM)
     .contains(accessLabelRegex)
     .click({ force: true });
-  cy.wait(3000);
+  cy.get(COMMON.loadingSpinner, { timeout: 60000 }).should("not.exist");
 }
 
 describe("Project-Level Teams & Permissions (MJ)", () => {
