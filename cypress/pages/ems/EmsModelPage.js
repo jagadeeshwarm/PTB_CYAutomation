@@ -19,6 +19,9 @@ class EmsModelPage {
 
   /** Open the Create Building Structure popup from the EMS home list. */
   clickNewEms() {
+    // The EMS home occasionally boots into the app's error page; refresh past
+    // it before reaching for the New button (see cy.recoverFromErrorPage).
+    cy.recoverFromErrorPage(EMS_MODEL.emsNewButton);
     cy.get(EMS_MODEL.emsNewButton, { timeout: 20000 })
       .filter(":visible")
       .first()
@@ -84,6 +87,7 @@ class EmsModelPage {
       .first()
       .click();
     cy.wait(2500);
+    cy.recoverFromErrorPage(EMS_MODEL.emsNewButton);
     cy.get(EMS_MODEL.emsNewButton, { timeout: 20000 }).should("be.visible");
   }
 

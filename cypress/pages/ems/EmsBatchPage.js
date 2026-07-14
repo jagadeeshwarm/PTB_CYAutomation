@@ -24,6 +24,9 @@ class EmsBatchPage {
 
   goToBatchModule() {
     this.switchModule(3);
+    // The Batch/progress page can transiently boot into the app's error page;
+    // refresh past it before asserting the New button (cy.recoverFromErrorPage).
+    cy.recoverFromErrorPage(EMS_BATCH.batchNewButton);
     cy.get(EMS_BATCH.batchNewButton, { timeout: 20000 })
       .filter(":visible")
       .should("have.length.greaterThan", 0);

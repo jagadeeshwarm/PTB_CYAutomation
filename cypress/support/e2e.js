@@ -35,4 +35,5 @@ Cypress.on('uncaught:exception', (err) => {
 before(() => {
   cy.clearCookies();
   cy.clearLocalStorage();
+  cy.clearAllSessionStorage();
 });
