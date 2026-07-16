@@ -136,11 +136,14 @@ describe("EMS - Building Models - Model", () => {
     emsModelPage.openTab("Tickets");
     // The Tickets tab panel can render a beat after the tab click, so the modal
     // wasn't open yet when clicked (Step 13 flake). Wait, then make sure the
-    // panel's "Create New Ticket" link is on screen before opening the modal.
+    // panel's "Create New Ticket" link has rendered before opening the modal.
+    // The panel wrapper lays out at 0x0 with its links CSS-clipped, so assert
+    // the link EXISTS rather than be.visible — same reason clickPanelLink
+    // force-clicks these (see EmsModelPage.clickPanelLink).
     cy.wait(3000);
     cy.contains("app-defect-property-panel", /create new ticket/i, {
       timeout: 15000,
-    }).should("be.visible");
+    }).should("exist");
     emsModelPage.clickCreateNewTicket();
     emsModelPage.enterTicketTitle(TICKET_TITLE);
     emsModelPage.selectTicketAssignee();
