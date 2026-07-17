@@ -2,7 +2,7 @@ import loginPage from "../../pages/LoginPage";
 import dashboardPage from "../../pages/DashboardPage";
 import projectCreationPage from "../../pages/ProjectCreationPage";
 
-const COMPANY_NAME = "Schuco India";
+const COMPANY_NAME = "Schueco India";
 const LOCATION = {
   line1: "alt.f coworking | Coworking Space In Financial District Hyderabad",
   city: "Nanakramguda",

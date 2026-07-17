@@ -9,7 +9,7 @@ import {
   stripIndexCol,
 } from "../../support/utils/xlsxSectionParser";
 
-const COMPANY_NAME = "Schuco India";
+const COMPANY_NAME = "Schueco India";
 const IMPORT_FILE_FIXTURE = "Central IKON_PIS_Latest_version.xlsx";
 const IMPORT_FILE_PATH = `cypress/fixtures/${IMPORT_FILE_FIXTURE}`;
 const PROJECT_NUMBER = `IMP-${Date.now()}`;
@@ -212,10 +212,9 @@ describe("Import Project Creation - Full Flow (TC01-TC08)", () => {
     ).to.be.greaterThan(0);
 
     checklistPage.getSectionsWithTables().then((pisSections) => {
-      expect(
-        pisSections.length,
-        "PIS has rendered tables",
-      ).to.be.greaterThan(0);
+      expect(pisSections.length, "PIS has rendered tables").to.be.greaterThan(
+        0,
+      );
 
       pisSections.forEach(({ el, letter, title }) => {
         // Basic structural sanity — headers + at least one row.
