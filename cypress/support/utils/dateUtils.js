@@ -86,9 +86,9 @@ export const prevWorkday = (date) => {
   return d;
 };
 
-// Offset by N working days (Mon–Fri), skipping weekends.
-// workdayOffset(-1) on a Monday returns the previous Friday.
-export const workdayOffset = (workdays, baseDate = new Date()) => {
+// Offset by N working days (Mon–Fri), skipping weekends, as a Date object.
+// workdayOffsetDate(-1) on a Monday returns the previous Friday.
+export const workdayOffsetDate = (workdays, baseDate = new Date()) => {
   const d = new Date(baseDate);
   const direction = workdays > 0 ? 1 : -1;
   let remaining = Math.abs(workdays);
@@ -97,8 +97,16 @@ export const workdayOffset = (workdays, baseDate = new Date()) => {
     const day = d.getDay();
     if (day !== 0 && day !== 6) remaining--;
   }
-  return formatDate(d);
+  return d;
 };
+
+// Offset by N working days, formatted as YYYY-MM-DD (native date-input value).
+export const workdayOffset = (workdays, baseDate = new Date()) =>
+  formatDate(workdayOffsetDate(workdays, baseDate));
+
+// Offset by N working days, formatted as mm/dd/yyyy (side-panel date pickers).
+export const workdayOffsetMMDDYYYY = (workdays, baseDate = new Date()) =>
+  formatDateMMDDYYYY(workdayOffsetDate(workdays, baseDate));
 
 // Calendar-day difference between two dates (d2 − d1), time-independent.
 export const diffCalendarDays = (d1, d2) => {

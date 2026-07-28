@@ -178,6 +178,18 @@ class SidePanelPage {
     cy.wait(800);
   }
 
+  // Apply a "Must Start On" hard constraint (date as mm/dd/yyyy) to the
+  // currently-selected task. This is the app's sanctioned way to place a task's
+  // start on/before the schedule start date — a plain inline grid edit is
+  // rejected with "The task cannot be moved before the Schedule start date."
+  // Assumes a task row is already selected.
+  setMustStartOn(dateMMDDYYYY) {
+    this.open();
+    this.setConstraintType("Must Start On");
+    this.setConstraintDateFromPanel(dateMMDDYYYY);
+    this.close();
+  }
+
   // --- Validations ---
 
   verifyTaskNameInTree(taskName) {

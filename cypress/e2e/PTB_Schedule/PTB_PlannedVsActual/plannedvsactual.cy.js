@@ -3,7 +3,8 @@ import dashboardPage from "../../../pages/DashboardPage";
 import schedulePage from "../../../pages/schedule/SchedulePage";
 import taskCreationPage from "../../../pages/schedule/TaskCreationPage";
 import plannedVsActualPage from "../../../pages/schedule/PlannedVsActualPage";
-import { dateOffset, workdayOffset } from "../../../support/utils/dateUtils";
+import sidePanelPage from "../../../pages/schedule/SidePanelPage";
+import { dateOffset, workdayOffsetMMDDYYYY } from "../../../support/utils/dateUtils";
 import { SCHEDULE_NAMES } from "../../../support/utils/scheduleNames";
 
 const SCHEDULE_NAME = SCHEDULE_NAMES.PLANNED_ACTUAL;
@@ -104,13 +105,26 @@ describe("Planned vs Actual - Complete Test", () => {
     taskCreationPage.scrollGanttRight();
   });
 
-  it("Step 4b: Task 2 (row 1) - move start date 1 working day earlier → OverDue", () => {
-    taskCreationPage.setStartDateForRow(1, workdayOffset(-1));
+  it("Step 4b: Task 2 (row 1) - Must Start On 1 working day earlier → OverDue", () => {
+    // A plain inline start-date edit is rejected here ("cannot be moved before
+    // the Schedule start date") because every task is created at today = the
+    // schedule start, so no single task can cross below it. The app's own
+    // remedy is a "Must Start On" hard constraint, which places the start on
+    // today−1: with the default 1D duration the end also lands on today−1
+    // (end ≤ today, start past) → OverDue.
+    taskCreationPage.selectTaskByRow(1);
+    sidePanelPage.setMustStartOn(workdayOffsetMMDDYYYY(-1));
+    taskCreationPage.selectTaskByRow(1);
     taskCreationPage.verifyTaskStatus(STATUS.OVERDUE);
   });
 
-  it("Step 4c: Task 3 (row 2) - move start date 1 working day earlier + set duration 2 → Delayed", () => {
-    taskCreationPage.setStartDateForRow(2, workdayOffset(-1));
+  it("Step 4c: Task 3 (row 2) - Must Start On 1 working day earlier + set duration 2 → Delayed", () => {
+    // Same schedule-start constraint as Task 2 → use a "Must Start On" of
+    // today−1, then widen duration to 2 so the end lands on today (start past,
+    // end = today) → Delayed. Keeping the end on today also leaves it equal to
+    // the planned baseline, which Step 5d asserts.
+    taskCreationPage.selectTaskByRow(2);
+    sidePanelPage.setMustStartOn(workdayOffsetMMDDYYYY(-1));
     taskCreationPage.selectTaskByRow(2);
     taskCreationPage.scrollGanttLeft();
     taskCreationPage.setDuration(2);
