@@ -1,5 +1,5 @@
 import { TODO_WORKFLOW, TODO_STATUS_KEY, COMMON } from "../../support/selectors";
-import { dateOffset } from "../../support/utils/dateUtils";
+import { addDays } from "../../support/utils/dateUtils";
 
 /**
  * TodoWorkflowPage — Coordination workspace > Workflows tab > To Dos (Kanban).
@@ -80,15 +80,21 @@ class TodoWorkflowPage {
   }
 
   clickVisibleDateCell(offsetDays) {
-    const day = String(Number(dateOffset(offsetDays).split("-")[2]));
+    // AntD cells carry title="M/D/YYYY" (non-padded), which uniquely identifies
+    // the day. Matching on bare day-number text is ambiguous: adjacent-month
+    // overflow cells (e.g. a disabled "30" from the previous month) share the
+    // same number and, being first in DOM order, get clicked — but they're
+    // ant-picker-cell-disabled (pointer-events:none) and the click fails.
+    const d = addDays(offsetDays);
+    const title = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 
     cy.get(TODO_WORKFLOW.datePopupTable, { timeout: 10000 })
       .filter(":visible")
       .first()
       .within(() => {
-        cy.get("td")
+        cy.get(`td[title="${title}"]`)
+          .not(".ant-picker-cell-disabled")
           .filter(":visible")
-          .filter((_i, cell) => cell.textContent.trim() === day)
           .first()
           .click();
       });

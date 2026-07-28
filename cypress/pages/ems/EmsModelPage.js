@@ -1,5 +1,4 @@
 import { EMS_MODEL, TODO_WORKFLOW, COMMON } from "../../support/selectors";
-import { dateOffset } from "../../support/utils/dateUtils";
 
 /**
  * EmsModelPage — Element Management workspace > Building Models > Model tab.
@@ -439,14 +438,18 @@ class EmsModelPage {
           .first()
           .click();
       } else {
-        const day = String(Number(dateOffset(0).split("-")[2]));
+        // Match the cell by its full title="M/D/YYYY" (non-padded) rather than a
+        // bare day number: an adjacent-month overflow cell can share the same
+        // number but be ant-picker-cell-disabled (pointer-events:none).
+        const t = new Date();
+        const title = `${t.getMonth() + 1}/${t.getDate()}/${t.getFullYear()}`;
         cy.get(TODO_WORKFLOW.datePopupTable, { timeout: 10000 })
           .filter(":visible")
           .first()
           .within(() => {
-            cy.get("td")
+            cy.get(`td[title="${title}"]`)
+              .not(".ant-picker-cell-disabled")
               .filter(":visible")
-              .filter((_i, cell) => cell.textContent.trim() === day)
               .first()
               .click();
           });
