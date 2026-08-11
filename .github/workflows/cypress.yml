@@ -1,0 +1,131 @@
+name: Cypress E2E
+
+# The suite runs against the shared staging environment with shared test logins,
+# and specs use `testIsolation: false` (state is chained inside a describe block).
+# So: no push/PR trigger by default, and never two runs at once (see `concurrency`).
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Which suite to run
+        type: choice
+        default: all
+        options:
+          - all
+          - PTB_Schedule
+          - PTB_EMS
+          - PTB_coordination
+          - PTB_FieldLogs
+          - PTB_ProjectCreation
+          - PTB_TeamsAndPermissions
+      spec:
+        description: Spec glob override (wins over "suite", e.g. cypress/e2e/PTB_EMS/model.cy.js)
+        type: string
+        default: ''
+      browser:
+        description: Browser to run in
+        type: choice
+        default: electron
+        options:
+          - electron
+          - chrome
+  schedule:
+    # 02:00 UTC on weekdays (07:30 IST).
+    - cron: '0 2 * * 1-5'
+
+concurrency:
+  group: cypress-staging
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    name: ${{ inputs.suite || 'all' }} on ${{ inputs.browser || 'electron' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Resolve spec glob
+        id: target
+        env:
+          SUITE: ${{ inputs.suite }}
+          SPEC: ${{ inputs.spec }}
+        run: |
+          if [ -n "$SPEC" ]; then
+            echo "spec=$SPEC" >> "$GITHUB_OUTPUT"
+          elif [ -n "$SUITE" ] && [ "$SUITE" != "all" ]; then
+            echo "spec=cypress/e2e/$SUITE/**/*.cy.js" >> "$GITHUB_OUTPUT"
+          else
+            echo "spec=cypress/e2e/**/*.cy.js" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Optional: keeps CI working when the committed fixture credentials change.
+      # Add a repository secret named PTB_USERS_JSON holding the full users.json
+      # contents; without it the committed fixture is used as-is.
+      - name: Override test credentials
+        env:
+          USERS_JSON: ${{ secrets.PTB_USERS_JSON }}
+        run: |
+          if [ -n "$USERS_JSON" ]; then
+            printf '%s' "$USERS_JSON" > cypress/fixtures/users.json
+            echo "Applied PTB_USERS_JSON secret over the committed fixture."
+          else
+            echo "PTB_USERS_JSON not set - using the committed cypress/fixtures/users.json."
+          fi
+
+      - name: Run Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          install-command: npm ci
+          browser: ${{ inputs.browser || 'electron' }}
+          spec: ${{ steps.target.outputs.spec }}
+        env:
+          # Reporter filenames use ':' from the ISO timestamp, which is fine on Linux.
+          TZ: Asia/Kolkata
+
+      - name: Upload mochawesome report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-report-${{ github.run_number }}
+          path: cypress/reports
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ github.run_number }}
+          path: cypress/screenshots
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Cypress run"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Spec | \`${{ steps.target.outputs.spec }}\` |"
+            echo "| Browser | ${{ inputs.browser || 'electron' }} |"
+            echo "| Base URL | https://staging.plantobuild.online |"
+            echo "| Result | ${{ job.status }} |"
+            echo
+            echo "The HTML report is attached to this run as **cypress-report-${{ github.run_number }}**."
+            if [ -d cypress/screenshots ] && [ -n "$(find cypress/screenshots -name '*.png' -print -quit)" ]; then
+              echo
+              echo "### Failing tests (from screenshots)"
+              find cypress/screenshots -name '*.png' | sed 's|cypress/screenshots/||; s|^|- |'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
